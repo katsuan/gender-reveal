@@ -36,6 +36,13 @@
     border: 1px solid var(--line); background: #fff; color: var(--ink);
   }
   textarea { min-height: 80px; resize: vertical; }
+  /* iOS Safari の日付入力は固有の最小幅を持つためリセットしてはみ出しを防ぐ */
+  input[type=date], input[type=datetime-local] {
+    -webkit-appearance: none; appearance: none; display: block;
+    min-width: 0; max-width: 100%; min-height: 48px; line-height: 1.4;
+  }
+  input::-webkit-date-and-time-value { text-align: left; margin: 0; }
+  .row > * { min-width: 0; }
   .gender { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .gender label { margin: 0; }
   .gender input { display: none; }
