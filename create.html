@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>発表ページ作成</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --boy: #5aa9e6;
+    --girl: #f48fb1;
+    --girl-deep: #d9557f;
+    --gold: #f5c542;
+    --bg-top: #fff8f0;
+    --bg-bottom: #f3ecff;
+    --ink: #3d3450;
+    --ink-soft: #7a7090;
+    --line: #e6def0;
+    --card: rgba(255, 255, 255, 0.9);
+    --shadow: 0 10px 30px rgba(90, 70, 130, 0.14);
+    --radius-lg: 24px;
+    --radius-md: 12px;
+    --max-w: 480px;
+    --font: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); color: var(--ink); background: linear-gradient(180deg, var(--bg-top), var(--bg-bottom)); background-attachment: fixed; min-height: 100vh; }
+  .wrap { max-width: var(--max-w); margin: 0 auto; padding: 28px 16px 48px; display: flex; flex-direction: column; gap: 16px; }
+  h1 { text-align: center; font-size: 24px; font-weight: 800; background: linear-gradient(90deg, var(--boy), var(--girl)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .sub { text-align: center; font-size: 13px; color: var(--ink-soft); line-height: 1.7; }
+  .card { background: var(--card); border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+  label { font-size: 13px; font-weight: 700; display: block; margin-bottom: 6px; }
+  .opt { font-weight: 400; color: var(--ink-soft); font-size: 11px; margin-left: 4px; }
+  input, textarea, select {
+    width: 100%; font-family: inherit; font-size: 16px; padding: 12px; border-radius: var(--radius-md);
+    border: 1px solid var(--line); background: #fff; color: var(--ink);
+  }
+  textarea { min-height: 80px; resize: vertical; }
+  .gender { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .gender input { display: none; }
+  .gender span {
+    display: block; text-align: center; padding: 14px 6px; border-radius: var(--radius-md); border: 2px solid var(--line);
+    background: #fff; font-weight: 700; cursor: pointer; transition: .15s;
+  }
+  .gender input:checked + span { border-color: var(--girl); background: #fff2f7; }
+  .gender input[value="boy"]:checked + span { border-color: var(--boy); background: #eef7ff; }
+  .gender input[value="twins"]:checked + span, .gender input[value="custom"]:checked + span { border-color: var(--gold); background: #fffaeb; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .check { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .check input { width: auto; }
+  .btn {
+    border: none; border-radius: 99px; padding: 16px; font-family: inherit; font-size: 16px; font-weight: 800; color: #fff; cursor: pointer;
+    background: linear-gradient(90deg, var(--boy), var(--girl)); box-shadow: 0 8px 20px rgba(200, 120, 180, .3);
+  }
+  .btn.ghost { background: #fff; color: var(--girl-deep); box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+  .out { display: none; }
+  .out.show { display: flex; }
+  .url { font-size: 12px; word-break: break-all; background: #fff; border: 1px dashed var(--line); border-radius: var(--radius-md); padding: 12px; color: var(--ink-soft); }
+  .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .note { font-size: 12px; color: var(--ink-soft); line-height: 1.7; }
+  #customBox { display: none; }
+  a { color: var(--girl-deep); }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <h1>🎁 発表ページを作る</h1>
+  <p class="sub">入力するとシェア用URLができます。<br>性別はURL内で見えないように変換されます。</p>
+
+  <form class="card" id="form" autocomplete="off">
+    <div>
+      <label>性別</label>
+      <div class="gender">
+        <label><input type="radio" name="gender" value="boy"><span>👦 男の子</span></label>
+        <label><input type="radio" name="gender" value="girl"><span>👧 女の子</span></label>
+        <label><input type="radio" name="gender" value="twins"><span>👶👶 双子</span></label>
+        <label><input type="radio" name="gender" value="custom"><span>✏️ カスタム</span></label>
+      </div>
+    </div>
+    <div id="customBox" class="row">
+      <div><label>表示テキスト</label><input name="label" placeholder="男の子と女の子！"></div>
+      <div><label>絵文字</label><input name="emoji" placeholder="👦👧"></div>
+      <div><label>テーマ色</label><input name="color" type="color" value="#f5c542"></div>
+    </div>
+    <div class="row">
+      <div><label>出産予定日</label><input name="due" type="date"></div>
+      <div><label>発表解禁日時<span class="opt">任意</span></label><input name="reveal" type="datetime-local"></div>
+    </div>
+    <div class="row">
+      <div><label>パパ<span class="opt">任意</span></label><input name="dad" placeholder="太郎"></div>
+      <div><label>ママ<span class="opt">任意</span></label><input name="mom" placeholder="花子"></div>
+    </div>
+    <div><label>赤ちゃんの名前・愛称<span class="opt">任意</span></label><input name="name" placeholder="ひな"></div>
+    <div><label>タイトル<span class="opt">任意</span></label><input name="title" placeholder="ベビーの性別発表"></div>
+    <div><label>発表後のメッセージ<span class="opt">任意</span></label><textarea name="msg" placeholder="元気に生まれてきてね！"></textarea></div>
+    <label class="check"><input type="checkbox" name="plain"> URLを平文にする(性別がURLに見えます)</label>
+    <button class="btn" type="submit">URLを作成</button>
+  </form>
+
+  <section class="card out" id="out">
+    <label>シェア用URL</label>
+    <div class="url" id="url"></div>
+    <div class="btns">
+      <button class="btn ghost" id="copy" type="button">コピー</button>
+      <a class="btn" id="open" target="_blank" rel="noopener" style="text-align:center;text-decoration:none">開いてみる</a>
+    </div>
+    <p class="note">⚠️ 「開いてみる」を押すと自分にネタバレします。プレビューは解禁日時を未来にして確認するのがおすすめ。</p>
+  </section>
+</main>
+
+<script>
+(() => {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const form = $("form");
+
+  form.addEventListener("change", () => {
+    $("customBox").style.display = form.gender.value === "custom" ? "grid" : "none";
+  });
+
+  function b64urlEncode(str) {
+    const bytes = new TextEncoder().encode(str);
+    let bin = ""; bytes.forEach(b => bin += String.fromCharCode(b));
+    return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    if (!fd.get("gender")) { alert("性別を選んでください"); return; }
+    const data = {};
+    for (const k of ["gender", "due", "reveal", "dad", "mom", "name", "title", "msg"]) {
+      const v = (fd.get(k) || "").trim(); if (v) data[k] = v;
+    }
+    if (data.gender === "custom") {
+      for (const k of ["label", "emoji", "color"]) { const v = (fd.get(k) || "").trim(); if (v) data[k] = v; }
+    }
+    const base = new URL("./", location.href);
+    const url = new URL("index.html", base);
+    if (fd.get("plain")) Object.entries(data).forEach(([k, v]) => url.searchParams.set(k, v));
+    else url.searchParams.set("d", b64urlEncode(JSON.stringify(data)));
+    $("url").textContent = url.href;
+    $("open").href = url.href;
+    $("out").classList.add("show");
+    $("out").scrollIntoView({ behavior: "smooth" });
+  });
+
+  $("copy").onclick = async () => {
+    try { await navigator.clipboard.writeText($("url").textContent); $("copy").textContent = "コピーしました！"; }
+    catch { prompt("コピーしてください", $("url").textContent); }
+  };
+})();
+</script>
+</body>
+</html>
