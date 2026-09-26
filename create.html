@@ -65,7 +65,7 @@
 <body>
 <main class="wrap">
   <h1>🎁 発表ページを作る</h1>
-  <p class="sub">入力するとシェア用URLができます。<br>性別はURL内で見えないように変換されます。</p>
+  <p class="sub">入力するとシェア用URLができます。<br>性別は暗号化され、URLからは見えません。</p>
 
   <form class="card" id="form" autocomplete="off">
     <div>
@@ -93,6 +93,7 @@
     <div><label>赤ちゃんの名前・愛称<span class="opt">任意</span></label><input name="name" placeholder="ひな"></div>
     <div><label>タイトル<span class="opt">任意</span></label><input name="title" placeholder="ベビーの性別発表"></div>
     <div><label>発表後のメッセージ<span class="opt">任意</span></label><textarea name="msg" placeholder="元気に生まれてきてね！"></textarea></div>
+    <div><label>合言葉<span class="opt">任意・おすすめ</span></label><input name="pass" placeholder="例: ひよこ"><p class="note" style="margin-top:6px">設定すると、合言葉を知らない人はURLを解析しても性別がわかりません。当日口頭やLINEで伝えてね。</p></div>
     <label class="check"><input type="checkbox" name="plain"> URLを平文にする(性別がURLに見えます)</label>
     <button class="btn" type="submit">URLを作成</button>
   </form>
@@ -119,26 +120,50 @@
   });
 
   function b64urlEncode(str) {
-    const bytes = new TextEncoder().encode(str);
+    return bytesToB64url(new TextEncoder().encode(str));
+  }
+  function bytesToB64url(bytes) {
     let bin = ""; bytes.forEach(b => bin += String.fromCharCode(b));
     return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
   }
 
-  form.addEventListener("submit", e => {
+  // 性別で暗号文の長さが変わらないよう 128 バイト単位にパディングして AES-GCM で暗号化
+  async function encryptSecret(obj, pass) {
+    const rand = n => crypto.getRandomValues(new Uint8Array(n));
+    const key = pass || bytesToB64url(rand(16));
+    obj.pad = "";
+    const len = new TextEncoder().encode(JSON.stringify(obj)).length;
+    obj.pad = "x".repeat(Math.ceil((len + 1) / 128) * 128 - len);
+    const salt = rand(16), iv = rand(12);
+    const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(key), "PBKDF2", false, ["deriveKey"]);
+    const aes = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: 150000, hash: "SHA-256" },
+      base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, aes, new TextEncoder().encode(JSON.stringify(obj))));
+    const parts = ["v1", bytesToB64url(salt), bytesToB64url(iv), bytesToB64url(ct)];
+    if (!pass) parts.push(key);
+    return parts.join(".");
+  }
+
+  const PUBLIC_KEYS = ["due", "reveal", "dad", "mom", "title"];
+  const SECRET_KEYS = ["gender", "name", "msg", "label", "emoji", "color"];
+
+  form.addEventListener("submit", async e => {
     e.preventDefault();
     const fd = new FormData(form);
     if (!fd.get("gender")) { alert("性別を選んでください"); return; }
-    const data = {};
-    for (const k of ["gender", "due", "reveal", "dad", "mom", "name", "title", "msg"]) {
-      const v = (fd.get(k) || "").trim(); if (v) data[k] = v;
+    const pick = keys => keys.reduce((o, k) => {
+      const v = (fd.get(k) || "").trim();
+      if (v && (fd.get("gender") === "custom" || !["label", "emoji", "color"].includes(k))) o[k] = v;
+      return o;
+    }, {});
+    const pub = pick(PUBLIC_KEYS), sec = pick(SECRET_KEYS);
+    const url = new URL("index.html", new URL("./", location.href));
+    if (fd.get("plain")) {
+      Object.entries({ ...pub, ...sec }).forEach(([k, v]) => url.searchParams.set(k, v));
+    } else {
+      if (Object.keys(pub).length) url.searchParams.set("d", b64urlEncode(JSON.stringify(pub)));
+      url.searchParams.set("s", await encryptSecret(sec, (fd.get("pass") || "").trim()));
     }
-    if (data.gender === "custom") {
-      for (const k of ["label", "emoji", "color"]) { const v = (fd.get(k) || "").trim(); if (v) data[k] = v; }
-    }
-    const base = new URL("./", location.href);
-    const url = new URL("index.html", base);
-    if (fd.get("plain")) Object.entries(data).forEach(([k, v]) => url.searchParams.set(k, v));
-    else url.searchParams.set("d", b64urlEncode(JSON.stringify(data)));
     $("url").textContent = url.href;
     $("open").href = url.href;
     $("out").classList.add("show");

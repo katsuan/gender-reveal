@@ -237,6 +237,20 @@
 
   canvas#confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
 
+  /* 合言葉モーダル */
+  .modal { position: fixed; inset: 0; z-index: 30; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(40, 30, 60, .45); backdrop-filter: blur(4px); }
+  .modal.show { display: flex; }
+  .modal-box { width: 100%; max-width: 360px; background: #fff; border-radius: var(--radius-lg); padding: 24px 20px; text-align: center; box-shadow: var(--shadow); }
+  .modal-box.shake-1 { animation: shake .35s 2; }
+  .modal-box h2 { font-size: 18px; margin-bottom: 6px; }
+  .modal-box p { font-size: 13px; color: var(--ink-soft); margin-bottom: 14px; }
+  .modal-box input { width: 100%; font-family: inherit; font-size: 18px; text-align: center; padding: 12px; border-radius: var(--radius-md); border: 2px solid #e6def0; margin-bottom: 8px; }
+  .modal-box input:focus { outline: none; border-color: var(--girl); }
+  .pass-err { font-size: 13px; color: var(--girl-deep); min-height: 1.4em; margin-bottom: 8px; }
+  .modal-actions { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; }
+  .modal-actions .pill { color: var(--ink-soft); }
+  .modal-actions .pill.primary { background: linear-gradient(90deg, var(--boy), var(--girl)); color: #fff; }
+
   /* エラー / 未設定 */
   .empty { text-align: center; line-height: 1.8; font-size: 14px; }
   .empty a { color: var(--girl-deep); font-weight: 700; }
@@ -320,6 +334,19 @@
   </div>
 </div>
 
+<div class="modal" id="passModal">
+  <form class="modal-box" id="passBox">
+    <h2>🔑 合言葉を入力</h2>
+    <p>パパ・ママから聞いた合言葉を入れてね</p>
+    <input id="passInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div class="pass-err" id="passErr"></div>
+    <div class="modal-actions">
+      <button type="button" class="pill" id="passCancel">戻る</button>
+      <button type="submit" class="pill primary">発表へ</button>
+    </div>
+  </form>
+</div>
+
 <canvas id="confetti"></canvas>
 
 <script>
@@ -339,7 +366,8 @@
 
   /* ============ パラメータ読み込み ============ */
   // 平文: ?gender=girl&due=2027-02-14&reveal=2026-10-01T19:00&mom=花子&dad=太郎&name=ひな&msg=...
-  // 暗号化: ?d=<base64url(JSON)>  (create.html で生成。URLを見ても性別がバレない)
+  // 公開情報: ?d=<base64url(JSON)>  予定日・名前など
+  // 秘密情報: ?s=<AES-GCM暗号文>  性別・赤ちゃんの名前・メッセージ (create.html で生成)
   function b64urlDecode(str) {
     const b64 = str.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((str.length + 3) % 4);
     const bin = atob(b64);
@@ -352,13 +380,37 @@
     if (q.get("d")) {
       try { p = JSON.parse(b64urlDecode(q.get("d"))); } catch (e) { console.warn("d の解析に失敗", e); }
     }
-    for (const [k, v] of q.entries()) if (k !== "d" && !(k in p)) p[k] = v;
+    for (const [k, v] of q.entries()) if (k !== "d" && k !== "s" && !(k in p)) p[k] = v;
+    p.secret = q.get("s") || null; // 暗号化された性別データ
+    normalizeGender(p);
+    return p;
+  }
+  function normalizeGender(p) {
     const g = String(p.gender || p.g || "").trim().toLowerCase();
     p.gender = GENDERS[g] ? g : (ALIASES[g] || null);
     if (!p.gender && (g === "custom" || (g && p.label))) p.gender = "custom"; // カスタム
-    return p;
   }
   const P = readParams();
+
+  /* ============ 復号(AES-GCM) ============ */
+  // s = v1.<salt>.<iv>.<ciphertext>[.<key>]  key が無ければ合言葉モード
+  const b64urlToBytes = s => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), c => c.charCodeAt(0));
+  const secretParts = P.secret ? P.secret.split(".") : null;
+  const needsPass = !!secretParts && !secretParts[4];
+  async function decryptSecret(pass) {
+    const [ver, salt, iv, ct, key] = secretParts;
+    if (ver !== "v1") throw new Error("unsupported");
+    const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(key || pass), "PBKDF2", false, ["deriveKey"]);
+    const aes = await crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt: b64urlToBytes(salt), iterations: 150000, hash: "SHA-256" },
+      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+    const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64urlToBytes(iv) }, aes, b64urlToBytes(ct));
+    const data = JSON.parse(new TextDecoder().decode(plain));
+    delete data.pad;
+    Object.assign(P, data);
+    normalizeGender(P);
+    P.secret = null;
+  }
 
   function parseDate(s) {
     if (!s) return null;
@@ -433,7 +485,7 @@
   /* ============ 発表ロック ============ */
   function updateLock() {
     const btn = $("startBtn");
-    if (!P.gender) {
+    if (!P.gender && !P.secret) {
       btn.disabled = true;
       $("revealLabel").textContent = "";
       $("revealCountdown").innerHTML = "";
@@ -664,11 +716,37 @@
     busy = false;
   }
 
-  $("startBtn").onclick = () => {
+  $("startBtn").onclick = async () => {
     if ($("startBtn").disabled) return;
     if (soundOn()) audio().resume?.(); // iOS 対策: ユーザー操作で解禁
+    if (P.secret) {
+      if (needsPass) { openPass(); return; }
+      try { await decryptSecret(); } catch (e) { alert("データを読み込めませんでした。URLを確認してください"); return; }
+    }
     stage.style.background = "";
     resetStage();
+  };
+
+  /* ============ 合言葉モーダル ============ */
+  function openPass() {
+    $("passModal").classList.add("show");
+    $("passErr").textContent = "";
+    $("passInput").value = "";
+    setTimeout(() => $("passInput").focus(), 50);
+  }
+  $("passCancel").onclick = () => $("passModal").classList.remove("show");
+  $("passBox").onsubmit = async e => {
+    e.preventDefault();
+    const box = $("passBox");
+    try {
+      await decryptSecret($("passInput").value.trim());
+      $("passModal").classList.remove("show");
+      stage.style.background = "";
+      resetStage();
+    } catch (_) {
+      $("passErr").textContent = "合言葉がちがうみたい…🤔";
+      box.classList.remove("shake-1"); void box.offsetWidth; box.classList.add("shake-1");
+    }
   };
   $("replayBtn").onclick = () => { stage.style.background = ""; resetStage(); };
   $("shareBtn").onclick = async () => {
