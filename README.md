@@ -29,10 +29,11 @@
 | `dad` / `mom` | `太郎` | 表示名 |
 | `name` | `ひな` | 赤ちゃんの名前・愛称 |
 | `title` | `ベビーの性別発表` | タイトル |
+| `taps` | `10` | プレゼントを開けるタップ回数(1〜20、既定5) |
 | `msg` | `元気に生まれてきてね！` | 発表後のメッセージ |
 | `label` / `emoji` / `color` | `男の子と女の子！` / `👦👧` / `#f5c542` | `custom` 時の表示 |
 | `boyColor` / `girlColor` | `#5aa9e6` | テーマ色の上書き |
-| `d` | base64url(JSON) | 公開情報(due/reveal/dad/mom/title)をまとめたもの |
+| `d` | base64url(JSON) | 公開情報(due/reveal/dad/mom/title/taps)をまとめたもの |
 | `s` | `v1.salt.iv.暗号文[.key]` | 暗号化した秘密情報(gender/name/msg等) |
 
 平文例:
@@ -44,4 +45,4 @@ index.html?gender=girl&due=2027-02-14&dad=太郎&mom=花子&name=ひな
 ## カスタマイズ
 
 色・サイズは `index.html` 冒頭の `:root` の CSS 変数で一括変更できます。
-タップ回数は JS 冒頭の `TAPS_TO_OPEN` です。
+タップ回数の既定値は JS 冒頭の `DEFAULT_TAPS` です。
