@@ -37,6 +37,7 @@
   }
   textarea { min-height: 80px; resize: vertical; }
   .gender { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .gender label { margin: 0; }
   .gender input { display: none; }
   .gender span {
     display: block; text-align: center; padding: 14px 6px; border-radius: var(--radius-md); border: 2px solid var(--line);
@@ -58,6 +59,20 @@
   .url { font-size: 12px; word-break: break-all; background: #fff; border: 1px dashed var(--line); border-radius: var(--radius-md); padding: 12px; color: var(--ink-soft); }
   .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .note { font-size: 12px; color: var(--ink-soft); line-height: 1.7; }
+  .req { font-size: 10px; font-weight: 700; color: #fff; background: var(--girl-deep); border-radius: 99px; padding: 2px 8px; margin-left: 6px; vertical-align: 1px; }
+  .err-msg { display: none; font-size: 12px; color: var(--girl-deep); margin-top: 6px; font-weight: 700; }
+  .field.err .err-msg { display: block; }
+  .field.err input[type=date] { border-color: var(--girl-deep); background: #fff5f8; }
+  .field.err .gender span { border-color: #f2b3c7; }
+  .acc { border: 1px solid var(--line); border-radius: var(--radius-md); background: #fff; }
+  .acc summary {
+    list-style: none; cursor: pointer; padding: 14px; font-size: 14px; font-weight: 700;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .acc summary::-webkit-details-marker { display: none; }
+  .acc summary::after { content: "›"; margin-left: auto; font-size: 20px; color: var(--ink-soft); transition: transform .2s; }
+  .acc[open] summary::after { transform: rotate(90deg); }
+  .acc-body { padding: 0 14px 16px; display: flex; flex-direction: column; gap: 14px; }
   #customBox { display: none; }
   a { color: var(--girl-deep); }
 </style>
@@ -67,33 +82,49 @@
   <h1>🎁 発表ページを作る</h1>
   <p class="sub">入力するとシェア用URLができます。<br>性別は暗号化され、URLからは見えません。</p>
 
-  <form class="card" id="form" autocomplete="off">
-    <div>
-      <label>性別</label>
+  <form class="card" id="form" autocomplete="off" novalidate>
+    <div class="field" id="fGender">
+      <label>性別<span class="req">必須</span></label>
       <div class="gender">
         <label><input type="radio" name="gender" value="boy"><span>👦 男の子</span></label>
         <label><input type="radio" name="gender" value="girl"><span>👧 女の子</span></label>
         <label><input type="radio" name="gender" value="twins"><span>👶👶 双子</span></label>
         <label><input type="radio" name="gender" value="custom"><span>✏️ カスタム</span></label>
       </div>
+      <p class="err-msg">性別を選んでください</p>
     </div>
     <div id="customBox" class="row">
       <div><label>表示テキスト</label><input name="label" placeholder="男の子と女の子！"></div>
       <div><label>絵文字</label><input name="emoji" placeholder="👦👧"></div>
       <div><label>テーマ色</label><input name="color" type="color" value="#f5c542"></div>
     </div>
-    <div class="row">
-      <div><label>出産予定日</label><input name="due" type="date"></div>
-      <div><label>発表解禁日時<span class="opt">任意</span></label><input name="reveal" type="datetime-local"></div>
+    <div class="field" id="fDue">
+      <label>出産予定日<span class="req">必須</span></label>
+      <input name="due" type="date">
+      <p class="err-msg">予定日を入れてください</p>
     </div>
-    <div class="row">
-      <div><label>パパ<span class="opt">任意</span></label><input name="dad" placeholder="太郎"></div>
-      <div><label>ママ<span class="opt">任意</span></label><input name="mom" placeholder="花子"></div>
-    </div>
-    <div><label>赤ちゃんの名前・愛称<span class="opt">任意</span></label><input name="name" placeholder="ひな"></div>
-    <div><label>タイトル<span class="opt">任意</span></label><input name="title" placeholder="ベビーの性別発表"></div>
-    <div><label>発表後のメッセージ<span class="opt">任意</span></label><textarea name="msg" placeholder="元気に生まれてきてね！"></textarea></div>
-    <div><label>合言葉<span class="opt">任意・おすすめ</span></label><input name="pass" placeholder="例: ひよこ"><p class="note" style="margin-top:6px">設定すると、合言葉を知らない人はURLを解析しても性別がわかりません。当日口頭やLINEで伝えてね。</p></div>
+
+    <details class="acc">
+      <summary><span>🔒 合言葉・発表日時</span><span class="opt">任意</span></summary>
+      <div class="acc-body">
+        <div><label>合言葉<span class="opt">おすすめ</span></label><input name="pass" placeholder="例: ひよこ"><p class="note" style="margin-top:6px">設定すると、合言葉を知らない人はURLを解析しても性別がわかりません。当日口頭やLINEで伝えてね。</p></div>
+        <div><label>発表解禁日時</label><input name="reveal" type="datetime-local"><p class="note" style="margin-top:6px">この日時まで発表ボタンがロックされます。</p></div>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary><span>✨ 名前・メッセージ</span><span class="opt">任意</span></summary>
+      <div class="acc-body">
+        <div class="row">
+          <div><label>パパ</label><input name="dad" placeholder="太郎"></div>
+          <div><label>ママ</label><input name="mom" placeholder="花子"></div>
+        </div>
+        <div><label>赤ちゃんの名前・愛称</label><input name="name" placeholder="ひな"></div>
+        <div><label>タイトル</label><input name="title" placeholder="ベビーの性別発表"></div>
+        <div><label>発表後のメッセージ</label><textarea name="msg" placeholder="元気に生まれてきてね！"></textarea></div>
+      </div>
+    </details>
+
     <button class="btn" type="submit">URLを作成</button>
   </form>
 
@@ -114,7 +145,8 @@
   const $ = id => document.getElementById(id);
   const form = $("form");
 
-  form.addEventListener("change", () => {
+  form.addEventListener("change", e => {
+    e.target.closest(".field")?.classList.remove("err");
     $("customBox").style.display = form.gender.value === "custom" ? "grid" : "none";
   });
 
@@ -149,7 +181,10 @@
   form.addEventListener("submit", async e => {
     e.preventDefault();
     const fd = new FormData(form);
-    if (!fd.get("gender")) { alert("性別を選んでください"); return; }
+    const miss = { fGender: !fd.get("gender"), fDue: !fd.get("due") };
+    Object.entries(miss).forEach(([id, bad]) => $(id).classList.toggle("err", bad));
+    const first = Object.keys(miss).find(k => miss[k]);
+    if (first) { $(first).scrollIntoView({ behavior: "smooth", block: "center" }); return; }
     const pick = keys => keys.reduce((o, k) => {
       const v = (fd.get(k) || "").trim();
       if (v && (fd.get("gender") === "custom" || !["label", "emoji", "color"].includes(k))) o[k] = v;
