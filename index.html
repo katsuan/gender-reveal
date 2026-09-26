@@ -167,8 +167,10 @@
     background: radial-gradient(circle at 50% 40%, #fff 0%, var(--bg-bottom) 70%);
   }
   .stage.show { display: flex; }
+  .stage.dark { background: radial-gradient(circle at 50% 45%, #2a2340 0%, #0f0b1a 75%); color: #fff; transition: background .6s; }
 
   .hint { font-size: 16px; color: var(--ink-soft); margin-top: 26px; min-height: 1.5em; font-weight: 700; }
+  .stage.dark .hint { color: #cfc6e8; }
   .taps { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
   .tap-dot { width: 10px; height: 10px; border-radius: 50%; background: #e3dcef; transition: background .2s, transform .2s; }
   .tap-dot.on { background: linear-gradient(135deg, var(--boy), var(--girl)); transform: scale(1.3); }
@@ -219,6 +221,10 @@
   }
 
 
+
+  /* ハートビート */
+  .heart { font-size: 90px; display: none; animation: beat 1s ease-in-out infinite; filter: drop-shadow(0 0 20px rgba(255,120,160,.6)); }
+  @keyframes beat { 0%,100% { transform: scale(1); } 15% { transform: scale(1.25); } 30% { transform: scale(1); } 45% { transform: scale(1.18); } }
 
   /* 結果 */
   .result { display: none; flex-direction: column; align-items: center; gap: 12px; }
@@ -328,6 +334,7 @@
   </div>
   <div class="hint" id="hint">プレゼントをタップしてね</div>
   <div class="remain" id="remain"></div>
+  <div class="heart" id="heart">💓</div>
   <div class="taps" id="taps"></div>
   <div class="result" id="result">
     <div class="it">IT'S A…</div>
@@ -366,7 +373,7 @@
   const PREGNANCY_DAYS = 280;
   const GENDERS = {
     boy:      { label: "男の子", emoji: "👦💙", color: "--boy",  deep: "--boy-deep" },
-    girl:     { label: "女の子", emoji: "👧💗", color: "--girl", deep: "--girl-deep" },
+    girl:     { label: "女の子", emoji: "👧🩷", color: "--girl", deep: "--girl-deep" },
     twins:    { label: "双子！", emoji: "👶👶", color: "--gold", deep: "--gold" },
     surprise: { label: "ヒミツ！", emoji: "🤫✨", color: "--gold", deep: "--gold" },
   };
@@ -567,7 +574,7 @@
 
   /* ============ 背景バルーン ============ */
   (function floaters() {
-    const items = ["🎈", "💙", "🐣", "💗", "✨", "🍼", "🐣", "🎀", "⭐"];
+    const items = ["🎈", "💙", "🐣", "🩷", "✨", "🍼", "🐣", "🎀", "⭐"];
     const box = $("floaters");
     for (let i = 0; i < 16; i++) {
       const s = document.createElement("span");
@@ -592,6 +599,24 @@
     o.type = type; o.frequency.setValueAtTime(freq, t);
     g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur);
     o.connect(g).connect(c.destination); o.start(t); o.stop(t + dur);
+  }
+  // 心音「ドクン、ドクン」: 低いサイン波の2連打を1秒周期で
+  function heartbeat(beats) {
+    if (!soundOn()) return;
+    const c = audio();
+    for (let i = 0; i < beats; i++) {
+      [0, 0.18].forEach((off, k) => {
+        const t = c.currentTime + i * 1.0 + off;
+        const o = c.createOscillator(), g = c.createGain();
+        o.type = "sine";
+        o.frequency.setValueAtTime(k ? 70 : 85, t);
+        o.frequency.exponentialRampToValueAtTime(40, t + 0.15);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(k ? 0.35 : 0.5, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+        o.connect(g).connect(c.destination); o.start(t); o.stop(t + 0.22);
+      });
+    }
   }
   function fanfare() {
     [523, 659, 784, 1047].forEach((f, i) => tone(f, .35, "triangle", .22, i * .12));
@@ -655,6 +680,7 @@
     $("remain").style.display = "";
     $("taps").style.display = "";
     $("taps").innerHTML = Array.from({ length: TAPS_TO_OPEN }, () => '<i class="tap-dot"></i>').join("");
+    $("heart").style.display = "none";
     $("result").className = "result";
     document.body.classList.remove("revealed");
     root.style.removeProperty("--reveal"); root.style.removeProperty("--reveal-deep");
@@ -700,7 +726,14 @@
 
   async function climax() {
     await sleep(600);
+    // 暗転 + 心音
+    stage.classList.add("dark");
     gift.style.display = "none"; $("taps").style.display = "none"; $("remain").style.display = "none";
+    $("hint").textContent = "運命の瞬間…";
+    $("heart").style.display = "block";
+    heartbeat(2);
+    await sleep(2000);
+    $("heart").style.display = "none";
     $("hint").textContent = "";
     reveal();
   }
