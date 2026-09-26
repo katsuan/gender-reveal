@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gender Reveal</title>
+<meta name="description" content="ベビーの性別発表">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ===== 色・サイズはここで一括管理 ===== */
+  :root {
+    --boy: #5aa9e6;
+    --boy-deep: #2f7fc0;
+    --girl: #f48fb1;
+    --girl-deep: #d9557f;
+    --gold: #f5c542;
+    --bg-top: #fff8f0;
+    --bg-bottom: #f3ecff;
+    --ink: #3d3450;
+    --ink-soft: #7a7090;
+    --card: rgba(255, 255, 255, 0.82);
+    --card-border: rgba(255, 255, 255, 0.95);
+    --shadow: 0 10px 30px rgba(90, 70, 130, 0.14);
+    --radius-lg: 28px;
+    --radius-md: 16px;
+    --radius-sm: 10px;
+    --gap: 16px;
+    --max-w: 440px;
+    --font: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", system-ui, sans-serif;
+    --reveal: var(--gold); /* 発表後に boy/girl に切り替わる */
+    --reveal-deep: var(--gold);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: var(--font);
+    color: var(--ink);
+    background: linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+    background-attachment: fixed;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body.revealed { background: linear-gradient(180deg, #fff, color-mix(in srgb, var(--reveal) 28%, #fff)); }
+
+  .wrap {
+    max-width: var(--max-w);
+    margin: 0 auto;
+    padding: 28px 16px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap);
+    position: relative;
+    z-index: 2;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 22px 20px;
+    backdrop-filter: blur(8px);
+  }
+
+  /* ===== ヘッダー ===== */
+  .hero { text-align: center; padding-top: 8px; }
+  .hero .eyebrow {
+    font-size: 12px; letter-spacing: .25em; color: var(--ink-soft); text-transform: uppercase;
+  }
+  .hero h1 {
+    font-size: 30px; font-weight: 800; margin: 6px 0 4px; line-height: 1.3;
+    background: linear-gradient(90deg, var(--boy), var(--girl));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero .names { font-size: 15px; color: var(--ink-soft); }
+  .question {
+    display: inline-flex; gap: 10px; margin-top: 14px; align-items: center; font-weight: 800; font-size: 20px;
+  }
+  .question .b { color: var(--boy); } .question .g { color: var(--girl); }
+  .question .or { font-size: 13px; color: var(--ink-soft); font-weight: 400; }
+
+  /* ===== カウントダウン ===== */
+  .label { font-size: 13px; color: var(--ink-soft); text-align: center; margin-bottom: 12px; }
+  .countdown { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .cd-cell {
+    background: #fff; border-radius: var(--radius-md); padding: 12px 4px; text-align: center;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.04);
+  }
+  .cd-num { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .cd-unit { font-size: 11px; color: var(--ink-soft); margin-top: 2px; }
+  .cd-done { text-align: center; font-size: 18px; font-weight: 700; }
+
+  /* 妊娠週数プログレス */
+  .progress { margin-top: 16px; }
+  .progress-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-soft); margin-bottom: 6px; }
+  .bar { height: 12px; border-radius: 99px; background: #eee6f5; overflow: hidden; position: relative; }
+  .bar-fill {
+    height: 100%; width: 0; border-radius: 99px;
+    background: linear-gradient(90deg, var(--boy), var(--girl));
+    transition: width 1.4s cubic-bezier(.2,.8,.2,1);
+  }
+  .bar-baby {
+    position: absolute; top: -9px; font-size: 20px; transform: translateX(-50%);
+    transition: left 1.4s cubic-bezier(.2,.8,.2,1);
+  }
+
+  /* ===== カレンダー ===== */
+  .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .cal-title { font-weight: 800; font-size: 17px; }
+  .cal-btn {
+    width: 34px; height: 34px; border-radius: 50%; border: none; background: #fff; color: var(--ink);
+    font-size: 16px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.08);
+  }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+  .cal-dow { font-size: 11px; color: var(--ink-soft); padding: 4px 0; }
+  .cal-dow:first-child { color: var(--girl-deep); } .cal-dow:last-child { color: var(--boy-deep); }
+  .cal-day {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 14px;
+    border-radius: var(--radius-sm); position: relative; font-variant-numeric: tabular-nums;
+  }
+  .cal-day.muted { color: #cfc8da; }
+  .cal-day.past { color: #b8b0c6; }
+  .cal-day.today { box-shadow: inset 0 0 0 2px var(--ink-soft); font-weight: 700; }
+  .cal-day.reveal-day { background: color-mix(in srgb, var(--gold) 35%, #fff); font-weight: 700; }
+  .cal-day.due {
+    background: linear-gradient(135deg, var(--boy), var(--girl)); color: #fff; font-weight: 800;
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+  .cal-day.due::after { content: "👶"; position: absolute; top: -8px; right: -4px; font-size: 13px; }
+  .cal-legend { display: flex; gap: 14px; justify-content: center; margin-top: 12px; font-size: 11px; color: var(--ink-soft); flex-wrap: wrap; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
+  .dot.due { background: linear-gradient(135deg, var(--boy), var(--girl)); }
+  .dot.today { box-shadow: inset 0 0 0 2px var(--ink-soft); }
+  .dot.rv { background: color-mix(in srgb, var(--gold) 50%, #fff); }
+
+  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+
+  /* ===== 発表ボタン ===== */
+  .cta {
+    width: 100%; border: none; border-radius: 99px; padding: 18px; font-family: inherit;
+    font-size: 18px; font-weight: 800; color: #fff; cursor: pointer;
+    background: linear-gradient(90deg, var(--boy), var(--girl));
+    box-shadow: 0 8px 20px rgba(200, 120, 180, .35);
+    animation: glow 2.4s ease-in-out infinite;
+  }
+  .cta:disabled { background: #cfc8da; box-shadow: none; animation: none; cursor: not-allowed; }
+  @keyframes glow { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+  .lock-note { text-align: center; font-size: 13px; color: var(--ink-soft); margin-top: 10px; }
+  .sound-toggle {
+    display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px;
+    color: var(--ink-soft); margin-top: 10px; cursor: pointer; user-select: none;
+  }
+
+  /* ===== 演出ステージ(全画面) ===== */
+  .stage {
+    position: fixed; inset: 0; z-index: 10; display: none; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center; padding: 24px;
+    background: radial-gradient(circle at 50% 40%, #fff 0%, var(--bg-bottom) 70%);
+  }
+  .stage.show { display: flex; }
+  .stage.dark { background: radial-gradient(circle at 50% 45%, #2a2340 0%, #0f0b1a 75%); color: #fff; transition: background .6s; }
+
+  .hint { font-size: 16px; color: var(--ink-soft); margin-top: 26px; min-height: 1.5em; font-weight: 700; }
+  .stage.dark .hint { color: #cfc6e8; }
+  .taps { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
+  .tap-dot { width: 10px; height: 10px; border-radius: 50%; background: #e3dcef; transition: background .2s, transform .2s; }
+  .tap-dot.on { background: linear-gradient(135deg, var(--boy), var(--girl)); transform: scale(1.3); }
+
+  /* ギフトボックス */
+  .gift { position: relative; width: 190px; height: 190px; cursor: pointer; user-select: none; touch-action: manipulation; }
+  .gift .box {
+    position: absolute; bottom: 0; left: 15px; width: 160px; height: 120px; border-radius: 10px;
+    background: repeating-linear-gradient(45deg, var(--boy) 0 16px, #fff 16px 22px, var(--girl) 22px 38px, #fff 38px 44px);
+    box-shadow: 0 16px 30px rgba(0,0,0,.15);
+  }
+  .gift .lid {
+    position: absolute; bottom: 112px; left: 5px; width: 180px; height: 36px; border-radius: 10px;
+    background: linear-gradient(90deg, var(--boy-deep), var(--girl-deep));
+    transform-origin: 20% 100%;
+    transition: transform .8s cubic-bezier(.3,1.6,.5,1), opacity .8s;
+  }
+  .gift .ribbon-v { position: absolute; bottom: 0; left: 83px; width: 24px; height: 148px; background: var(--gold); border-radius: 4px; }
+  .gift .bow { position: absolute; bottom: 142px; left: 67px; font-size: 44px; line-height: 1; transition: transform .8s, opacity .8s; }
+  .gift.shake-1 { animation: shake .35s; }
+  .gift.shake-2 { animation: shake .3s 2; }
+  .gift.shake-3 { animation: shakeBig .25s 3; }
+  .gift.open .lid { transform: translate(-40px, -120px) rotate(-35deg); opacity: 0; }
+  .gift.open .bow { transform: translateY(-160px) rotate(40deg); opacity: 0; }
+  .gift.glow .box { box-shadow: 0 0 60px 20px color-mix(in srgb, var(--gold) 70%, transparent); }
+
+  @keyframes shake { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
+  @keyframes shakeBig {
+    0%,100% { transform: rotate(0) scale(1); } 20% { transform: rotate(-12deg) scale(1.05); }
+    60% { transform: rotate(12deg) scale(1.08); }
+  }
+
+  /* 3-2-1 */
+  .big-count {
+    font-size: 140px; font-weight: 800; line-height: 1; display: none;
+    background: linear-gradient(135deg, var(--boy), var(--girl));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .big-count.pop { animation: countPop .9s ease-out; }
+  @keyframes countPop { 0% { transform: scale(2.4); opacity: 0; } 30% { transform: scale(1); opacity: 1; } 80% { opacity: 1; } 100% { transform: scale(.7); opacity: 0; } }
+
+  /* ハートビート */
+  .heart { font-size: 90px; display: none; animation: beat 1s ease-in-out infinite; filter: drop-shadow(0 0 20px rgba(255,120,160,.6)); }
+  @keyframes beat { 0%,100% { transform: scale(1); } 15% { transform: scale(1.25); } 30% { transform: scale(1); } 45% { transform: scale(1.18); } }
+
+  /* 結果 */
+  .result { display: none; flex-direction: column; align-items: center; gap: 12px; }
+  .result.show { display: flex; }
+  .result .it { font-size: 18px; color: var(--ink-soft); letter-spacing: .15em; animation: fadeUp .8s both; }
+  .result .answer {
+    font-size: 64px; font-weight: 800; color: var(--reveal-deep); line-height: 1.15;
+    animation: zoomIn 1s cubic-bezier(.2,1.6,.4,1) both .2s;
+    text-shadow: 0 6px 24px color-mix(in srgb, var(--reveal) 50%, transparent);
+  }
+  .result .emoji { font-size: 72px; animation: zoomIn 1s cubic-bezier(.2,1.6,.4,1) both .5s; }
+  .result .baby-name { font-size: 20px; font-weight: 700; color: var(--reveal-deep); animation: fadeUp .8s both .9s; }
+  .result .msg { font-size: 15px; line-height: 1.8; color: var(--ink); max-width: 340px; white-space: pre-wrap; animation: fadeUp .8s both 1.2s; }
+  .result .actions { display: flex; gap: 10px; margin-top: 12px; animation: fadeUp .8s both 1.6s; }
+  .pill {
+    border: none; border-radius: 99px; padding: 12px 20px; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+    background: #fff; color: var(--reveal-deep); box-shadow: 0 4px 12px rgba(0,0,0,.1);
+  }
+  .pill.primary { background: var(--reveal); color: #fff; }
+  @keyframes zoomIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes fadeUp { 0% { transform: translateY(16px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+
+  /* 背景の浮遊バルーン */
+  .floaters { position: fixed; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
+  .floater { position: absolute; bottom: -80px; font-size: 32px; opacity: .55; animation: floatUp linear infinite; }
+  @keyframes floatUp { 0% { transform: translateY(0) rotate(0); } 100% { transform: translateY(-120vh) rotate(25deg); } }
+
+  canvas#confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
+
+  /* エラー / 未設定 */
+  .empty { text-align: center; line-height: 1.8; font-size: 14px; }
+  .empty a { color: var(--girl-deep); font-weight: 700; }
+
+  .footer { text-align: center; font-size: 12px; color: var(--ink-soft); }
+  .footer a { color: inherit; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="floaters" id="floaters" aria-hidden="true"></div>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <div class="eyebrow">Gender Reveal</div>
+    <h1 id="title">ベビーの性別発表</h1>
+    <div class="names" id="names"></div>
+    <div class="question"><span class="b">👦 男の子</span><span class="or">or</span><span class="g">女の子 👧</span></div>
+  </section>
+
+  <section class="card" id="dueCard">
+    <div class="label" id="dueLabel">出産予定日まで</div>
+    <div id="dueCountdown"></div>
+    <div class="progress" id="progress">
+      <div class="progress-meta"><span id="weekText"></span><span>40週</span></div>
+      <div class="bar"><div class="bar-fill" id="barFill"></div><div class="bar-baby" id="barBaby">🤰</div></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="cal-head">
+      <button class="cal-btn" id="calPrev" aria-label="前の月">‹</button>
+      <div class="cal-title" id="calTitle"></div>
+      <button class="cal-btn" id="calNext" aria-label="次の月">›</button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-legend">
+      <span><i class="dot due"></i>予定日</span>
+      <span><i class="dot today"></i>今日</span>
+      <span id="legendReveal"><i class="dot rv"></i>発表日</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="label" id="revealLabel">準備ができたら…</div>
+    <div id="revealCountdown"></div>
+    <button class="cta" id="startBtn">🎁 性別を発表する</button>
+    <div class="lock-note" id="lockNote"></div>
+    <label class="sound-toggle"><input type="checkbox" id="soundOn" checked> 🔊 効果音あり</label>
+  </section>
+
+  <div class="footer"><a href="create.html">自分用の発表ページを作る</a></div>
+</main>
+
+<!-- 演出ステージ -->
+<div class="stage" id="stage" aria-live="polite">
+  <div class="gift" id="gift" role="button" aria-label="プレゼントをタップ">
+    <div class="box"></div>
+    <div class="ribbon-v"></div>
+    <div class="lid"></div>
+    <div class="bow">🎀</div>
+  </div>
+  <div class="hint" id="hint">プレゼントをタップしてね</div>
+  <div class="taps" id="taps"></div>
+  <div class="heart" id="heart">💓</div>
+  <div class="big-count" id="bigCount"></div>
+  <div class="result" id="result">
+    <div class="it">IT'S A…</div>
+    <div class="answer" id="answer"></div>
+    <div class="emoji" id="answerEmoji"></div>
+    <div class="baby-name" id="babyName"></div>
+    <div class="msg" id="msg"></div>
+    <div class="actions">
+      <button class="pill" id="replayBtn">もう一度</button>
+      <button class="pill primary" id="shareBtn">シェア</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<script>
+(() => {
+  "use strict";
+
+  /* ================= 設定 ================= */
+  const TAPS_TO_OPEN = 5;
+  const PREGNANCY_DAYS = 280;
+  const GENDERS = {
+    boy:      { label: "男の子", emoji: "👦💙", color: "--boy",  deep: "--boy-deep" },
+    girl:     { label: "女の子", emoji: "👧💗", color: "--girl", deep: "--girl-deep" },
+    twins:    { label: "双子！", emoji: "👶👶", color: "--gold", deep: "--gold" },
+    surprise: { label: "ヒミツ！", emoji: "🤫✨", color: "--gold", deep: "--gold" },
+  };
+  const ALIASES = { m: "boy", male: "boy", 男: "boy", 男の子: "boy", f: "girl", female: "girl", 女: "girl", 女の子: "girl" };
+
+  /* ============ パラメータ読み込み ============ */
+  // 平文: ?gender=girl&due=2027-02-14&reveal=2026-10-01T19:00&mom=花子&dad=太郎&name=ひな&msg=...
+  // 暗号化: ?d=<base64url(JSON)>  (create.html で生成。URLを見ても性別がバレない)
+  function b64urlDecode(str) {
+    const b64 = str.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((str.length + 3) % 4);
+    const bin = atob(b64);
+    const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+  }
+  function readParams() {
+    const q = new URLSearchParams(location.search);
+    let p = {};
+    if (q.get("d")) {
+      try { p = JSON.parse(b64urlDecode(q.get("d"))); } catch (e) { console.warn("d の解析に失敗", e); }
+    }
+    for (const [k, v] of q.entries()) if (k !== "d" && !(k in p)) p[k] = v;
+    const g = String(p.gender || p.g || "").trim().toLowerCase();
+    p.gender = GENDERS[g] ? g : (ALIASES[g] || null);
+    if (!p.gender && (g === "custom" || (g && p.label))) p.gender = "custom"; // カスタム
+    return p;
+  }
+  const P = readParams();
+
+  function parseDate(s) {
+    if (!s) return null;
+    const d = new Date(/T/.test(s) ? s : s + "T00:00:00");
+    return isNaN(d) ? null : d;
+  }
+  const due = parseDate(P.due);
+  const revealAt = parseDate(P.reveal);
+
+  /* ============ ユーティリティ ============ */
+  const $ = id => document.getElementById(id);
+  const root = document.documentElement;
+  const cssVar = n => getComputedStyle(root).getPropertyValue(n).trim();
+  const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  const pad = n => String(n).padStart(2, "0");
+  const fmtDate = d => `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  // カスタム色
+  if (P.boyColor) root.style.setProperty("--boy", P.boyColor);
+  if (P.girlColor) root.style.setProperty("--girl", P.girlColor);
+
+  /* ============ ヘッダー ============ */
+  if (P.title) $("title").textContent = P.title;
+  const parents = [P.dad, P.mom].filter(Boolean);
+  $("names").textContent = parents.length ? `${parents.join(" & ")} ファミリー` : "";
+
+  /* ============ カウントダウン ============ */
+  function diffParts(target) {
+    let ms = Math.max(0, target - Date.now());
+    const d = Math.floor(ms / 864e5); ms -= d * 864e5;
+    const h = Math.floor(ms / 36e5); ms -= h * 36e5;
+    const m = Math.floor(ms / 6e4); ms -= m * 6e4;
+    const s = Math.floor(ms / 1e3);
+    return { d, h, m, s, done: target - Date.now() <= 0 };
+  }
+  function renderCountdown(el, target, doneText) {
+    const p = diffParts(target);
+    if (p.done) { el.innerHTML = `<div class="cd-done">${doneText}</div>`; return true; }
+    el.innerHTML = `<div class="countdown">
+      <div class="cd-cell"><div class="cd-num">${p.d}</div><div class="cd-unit">日</div></div>
+      <div class="cd-cell"><div class="cd-num">${pad(p.h)}</div><div class="cd-unit">時間</div></div>
+      <div class="cd-cell"><div class="cd-num">${pad(p.m)}</div><div class="cd-unit">分</div></div>
+      <div class="cd-cell"><div class="cd-num">${pad(p.s)}</div><div class="cd-unit">秒</div></div></div>`;
+    return false;
+  }
+
+  function renderProgress() {
+    if (!due) { $("progress").style.display = "none"; return; }
+    const start = new Date(due.getTime() - PREGNANCY_DAYS * 864e5);
+    const elapsed = Math.floor((Date.now() - start) / 864e5);
+    const ratio = Math.min(1, Math.max(0, elapsed / PREGNANCY_DAYS));
+    const w = Math.floor(elapsed / 7), dd = elapsed % 7;
+    $("weekText").textContent = elapsed < 0 ? "" : (elapsed >= PREGNANCY_DAYS ? "予定日を迎えました 🎉" : `いま 妊娠${w}週${dd}日`);
+    requestAnimationFrame(() => {
+      $("barFill").style.width = (ratio * 100) + "%";
+      $("barBaby").style.left = Math.min(96, Math.max(4, ratio * 100)) + "%";
+    });
+  }
+
+  function tick() {
+    if (due) {
+      $("dueLabel").textContent = `出産予定日 ${fmtDate(due)} まで`;
+      renderCountdown($("dueCountdown"), due, "予定日を迎えました 👶🎉");
+    } else {
+      $("dueCard").style.display = "none";
+    }
+    updateLock();
+  }
+
+  /* ============ 発表ロック ============ */
+  function updateLock() {
+    const btn = $("startBtn");
+    if (!P.gender) {
+      btn.disabled = true;
+      $("revealLabel").textContent = "";
+      $("revealCountdown").innerHTML = "";
+      $("lockNote").innerHTML = `性別が設定されていません。<br><a href="create.html" style="color:var(--girl-deep);font-weight:700">作成ページ</a>からURLを作ってください`;
+      return;
+    }
+    if (revealAt && revealAt > Date.now()) {
+      btn.disabled = true;
+      $("revealLabel").textContent = `発表は ${fmtDate(revealAt)} ${pad(revealAt.getHours())}:${pad(revealAt.getMinutes())} から`;
+      renderCountdown($("revealCountdown"), revealAt, "");
+      $("revealCountdown").style.marginBottom = "14px";
+      $("lockNote").textContent = "🔒 お楽しみに…！";
+    } else {
+      btn.disabled = false;
+      $("revealLabel").textContent = revealAt ? "🎉 発表の時間です！" : "準備ができたら…";
+      $("revealCountdown").innerHTML = "";
+      $("revealCountdown").style.marginBottom = "0";
+      $("lockNote").textContent = "";
+    }
+  }
+
+  /* ============ カレンダー ============ */
+  const today = new Date();
+  let calY, calM;
+  const initCal = due || today;
+  calY = initCal.getFullYear(); calM = initCal.getMonth();
+  if (!revealAt) $("legendReveal").style.display = "none";
+
+  function renderCal() {
+    $("calTitle").textContent = `${calY}年 ${calM + 1}月`;
+    const grid = $("calGrid");
+    const dows = ["日", "月", "火", "水", "木", "金", "土"];
+    let html = dows.map(d => `<div class="cal-dow">${d}</div>`).join("");
+    const first = new Date(calY, calM, 1);
+    const startDow = first.getDay();
+    const daysInMonth = new Date(calY, calM + 1, 0).getDate();
+    const prevDays = new Date(calY, calM, 0).getDate();
+    const cells = Math.ceil((startDow + daysInMonth) / 7) * 7;
+    const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    for (let i = 0; i < cells; i++) {
+      const dayNum = i - startDow + 1;
+      if (dayNum < 1 || dayNum > daysInMonth) {
+        const n = dayNum < 1 ? prevDays + dayNum : dayNum - daysInMonth;
+        html += `<div class="cal-day muted">${n}</div>`;
+        continue;
+      }
+      const d = new Date(calY, calM, dayNum);
+      const cls = ["cal-day"];
+      if (d < todayMid) cls.push("past");
+      if (sameDay(d, today)) cls.push("today");
+      if (revealAt && sameDay(d, revealAt)) cls.push("reveal-day");
+      if (due && sameDay(d, due)) cls.push("due");
+      html += `<div class="${cls.join(" ")}">${dayNum}</div>`;
+    }
+    grid.innerHTML = html;
+  }
+  $("calPrev").onclick = () => { calM--; if (calM < 0) { calM = 11; calY--; } renderCal(); };
+  $("calNext").onclick = () => { calM++; if (calM > 11) { calM = 0; calY++; } renderCal(); };
+
+  /* ============ 背景バルーン ============ */
+  (function floaters() {
+    const items = ["🎈", "💙", "💗", "✨", "🍼", "🎀", "⭐"];
+    const box = $("floaters");
+    for (let i = 0; i < 14; i++) {
+      const s = document.createElement("span");
+      s.className = "floater";
+      s.textContent = items[i % items.length];
+      s.style.left = Math.random() * 100 + "%";
+      s.style.fontSize = 18 + Math.random() * 22 + "px";
+      s.style.animationDuration = 12 + Math.random() * 14 + "s";
+      s.style.animationDelay = -Math.random() * 20 + "s";
+      box.appendChild(s);
+    }
+  })();
+
+  /* ============ サウンド(Web Audio 合成) ============ */
+  let ac = null;
+  const soundOn = () => $("soundOn").checked;
+  function audio() { if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)(); return ac; }
+  function tone(freq, dur = .15, type = "sine", vol = .2, when = 0) {
+    if (!soundOn()) return;
+    const c = audio(), t = c.currentTime + when;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur);
+    o.connect(g).connect(c.destination); o.start(t); o.stop(t + dur);
+  }
+  function drumroll(sec) {
+    if (!soundOn()) return;
+    const c = audio(), len = c.sampleRate * sec;
+    const buf = c.createBuffer(1, len, c.sampleRate), data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) {
+      const t = i / c.sampleRate;
+      const rate = 14 + t * 10; // だんだん速く
+      const env = Math.pow((Math.sin(t * rate * Math.PI * 2) + 1) / 2, 6);
+      data[i] = (Math.random() * 2 - 1) * env * (0.25 + 0.6 * t / sec);
+    }
+    const src = c.createBufferSource(); src.buffer = buf;
+    const f = c.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 900;
+    src.connect(f).connect(c.destination); src.start();
+  }
+  function fanfare() {
+    [523, 659, 784, 1047].forEach((f, i) => tone(f, .35, "triangle", .22, i * .12));
+    [784, 1047, 1319].forEach(f => tone(f, 1.2, "triangle", .12, .55));
+  }
+
+  /* ============ 紙吹雪 ============ */
+  const cv = $("confetti"), ctx = cv.getContext("2d");
+  let parts = [], raf = null;
+  function resize() { cv.width = innerWidth * devicePixelRatio; cv.height = innerHeight * devicePixelRatio; ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0); }
+  addEventListener("resize", resize); resize();
+  function burst(colors, count = 180, origin = { x: innerWidth / 2, y: innerHeight * .45 }) {
+    for (let i = 0; i < count; i++) {
+      const a = Math.random() * Math.PI * 2, sp = 4 + Math.random() * 9;
+      parts.push({
+        x: origin.x, y: origin.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 6,
+        w: 6 + Math.random() * 6, h: 8 + Math.random() * 10, r: Math.random() * 6, vr: (Math.random() - .5) * .3,
+        c: colors[i % colors.length], life: 0, max: 160 + Math.random() * 80, shape: Math.random() < .25 ? "c" : "r",
+      });
+    }
+    if (!raf) loop();
+  }
+  function rain(colors, secs = 4) {
+    const end = Date.now() + secs * 1000;
+    (function drop() {
+      for (let i = 0; i < 6; i++) parts.push({
+        x: Math.random() * innerWidth, y: -20, vx: (Math.random() - .5) * 2, vy: 2 + Math.random() * 3,
+        w: 6 + Math.random() * 5, h: 8 + Math.random() * 8, r: Math.random() * 6, vr: (Math.random() - .5) * .2,
+        c: colors[Math.floor(Math.random() * colors.length)], life: 0, max: 400, shape: Math.random() < .25 ? "c" : "r",
+      });
+      if (!raf) loop();
+      if (Date.now() < end) setTimeout(drop, 60);
+    })();
+  }
+  function loop() {
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    parts = parts.filter(p => p.life < p.max && p.y < innerHeight + 40);
+    for (const p of parts) {
+      p.life++; p.vy += .18; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c;
+      ctx.globalAlpha = Math.min(1, (p.max - p.life) / 40);
+      if (p.shape === "c") { ctx.beginPath(); ctx.arc(0, 0, p.w / 2, 0, Math.PI * 2); ctx.fill(); }
+      else ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * Math.abs(Math.cos(p.r)));
+      ctx.restore();
+    }
+    raf = parts.length ? requestAnimationFrame(loop) : null;
+    if (!raf) ctx.clearRect(0, 0, innerWidth, innerHeight);
+  }
+
+  /* ============ 演出シーケンス ============ */
+  const stage = $("stage"), gift = $("gift");
+  let taps = 0, busy = false;
+
+  function resetStage() {
+    taps = 0; busy = false;
+    stage.className = "stage show";
+    gift.className = "gift"; gift.style.display = "";
+    $("hint").textContent = "プレゼントをタップしてね";
+    $("taps").style.display = "";
+    $("taps").innerHTML = Array.from({ length: TAPS_TO_OPEN }, () => '<i class="tap-dot"></i>').join("");
+    $("heart").style.display = "none";
+    $("bigCount").style.display = "none";
+    $("result").className = "result";
+    document.body.classList.remove("revealed");
+    root.style.removeProperty("--reveal"); root.style.removeProperty("--reveal-deep");
+  }
+
+  const tapHints = ["ん？ 何か入ってる…", "ゴソゴソ…", "もうちょっと！", "ドキドキ…", ""];
+  gift.addEventListener("click", async () => {
+    if (busy || taps >= TAPS_TO_OPEN) return;
+    taps++;
+    document.querySelectorAll(".tap-dot").forEach((d, i) => d.classList.toggle("on", i < taps));
+    gift.classList.remove("shake-1", "shake-2", "shake-3"); void gift.offsetWidth;
+    gift.classList.add(taps < 3 ? "shake-1" : taps < TAPS_TO_OPEN ? "shake-2" : "shake-3");
+    tone(300 + taps * 90, .12, "square", .08);
+    if (navigator.vibrate) navigator.vibrate(30 + taps * 15);
+    $("hint").textContent = tapHints[taps - 1];
+    if (taps >= TAPS_TO_OPEN) { busy = true; await climax(); }
+  });
+
+  async function climax() {
+    await sleep(900);
+    // 暗転 + ハートビート + ドラムロール
+    stage.classList.add("dark");
+    gift.style.display = "none"; $("taps").style.display = "none";
+    $("hint").textContent = "運命の瞬間…";
+    $("heart").style.display = "block";
+    drumroll(4.2);
+    await sleep(1700);
+    $("heart").style.display = "none";
+    $("hint").textContent = "";
+    // 3・2・1
+    const bc = $("bigCount"); bc.style.display = "block";
+    for (const n of [3, 2, 1]) {
+      bc.textContent = n; bc.classList.remove("pop"); void bc.offsetWidth; bc.classList.add("pop");
+      tone(440 + (3 - n) * 110, .2, "sine", .15);
+      if (navigator.vibrate) navigator.vibrate(60);
+      await sleep(900);
+    }
+    bc.style.display = "none";
+    reveal();
+  }
+
+  function reveal() {
+    const g = GENDERS[P.gender] || { label: P.label || "？", emoji: P.emoji || "🎉", color: "--gold", deep: "--gold" };
+    const color = P.color || cssVar(g.color), deep = P.color || cssVar(g.deep);
+    root.style.setProperty("--reveal", color);
+    root.style.setProperty("--reveal-deep", deep);
+    stage.className = "stage show";
+    stage.style.background = `radial-gradient(circle at 50% 40%, #fff 0%, color-mix(in srgb, ${color} 35%, #fff) 80%)`;
+    document.body.classList.add("revealed");
+
+    $("answer").textContent = P.label || g.label;
+    $("answerEmoji").textContent = P.emoji || g.emoji;
+    $("babyName").textContent = P.name ? `${P.name} ちゃん` : "";
+    $("msg").textContent = P.msg || "";
+    $("result").classList.add("show");
+
+    const palette = P.gender === "boy" ? [color, deep, "#ffffff", "#bfe3ff", cssVar("--gold")]
+      : P.gender === "girl" ? [color, deep, "#ffffff", "#ffd6e5", cssVar("--gold")]
+      : [cssVar("--boy"), cssVar("--girl"), cssVar("--gold"), "#fff"];
+    fanfare();
+    if (navigator.vibrate) navigator.vibrate([100, 50, 200]);
+    burst(palette, 220);
+    setTimeout(() => burst(palette, 120, { x: innerWidth * .2, y: innerHeight * .6 }), 400);
+    setTimeout(() => burst(palette, 120, { x: innerWidth * .8, y: innerHeight * .6 }), 700);
+    setTimeout(() => rain(palette, 5), 900);
+    busy = false;
+  }
+
+  $("startBtn").onclick = () => {
+    if ($("startBtn").disabled) return;
+    if (soundOn()) audio().resume?.(); // iOS 対策: ユーザー操作で解禁
+    stage.style.background = "";
+    resetStage();
+  };
+  $("replayBtn").onclick = () => { stage.style.background = ""; resetStage(); };
+  $("shareBtn").onclick = async () => {
+    const data = { title: document.title, text: "ベビーの性別発表ページです👶 ドキドキしながら開けてね！", url: location.href };
+    try {
+      if (navigator.share) await navigator.share(data);
+      else { await navigator.clipboard.writeText(location.href); $("shareBtn").textContent = "コピーしました！"; }
+    } catch (_) {}
+  };
+  // ステージ外(結果画面)でESCで閉じる
+  addEventListener("keydown", e => { if (e.key === "Escape" && !busy) stage.className = "stage"; });
+
+  /* ============ 初期化 ============ */
+  renderProgress();
+  renderCal();
+  tick();
+  setInterval(tick, 1000);
+})();
+</script>
+</body>
+</html>
