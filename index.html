@@ -129,7 +129,14 @@
     animation: pulse 1.8s ease-in-out infinite;
   }
   .cal-day.due::after { content: "👶"; position: absolute; top: -8px; right: -4px; font-size: 13px; }
-  .cal-legend { display: flex; gap: 14px; justify-content: center; margin-top: 12px; font-size: 11px; color: var(--ink-soft); flex-wrap: wrap; }
+  .cal-legend { display: flex; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+  .legend-btn {
+    font-family: inherit; font-size: 12px; color: var(--ink-soft); cursor: pointer;
+    background: #fff; border: 1px solid #ebe4f3; border-radius: 99px; padding: 6px 12px;
+    display: inline-flex; align-items: center; transition: background .15s, transform .1s;
+  }
+  .legend-btn:active { transform: scale(.95); background: #f6f1fb; }
+  .legend-btn.current { border-color: var(--ink-soft); color: var(--ink); font-weight: 700; }
   .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
   .dot.due { background: linear-gradient(135deg, var(--boy), var(--girl)); }
   .dot.today { box-shadow: inset 0 0 0 2px var(--ink-soft); }
@@ -292,9 +299,9 @@
     </div>
     <div class="cal-grid" id="calGrid"></div>
     <div class="cal-legend">
-      <span><i class="dot due"></i>予定日</span>
-      <span><i class="dot today"></i>今日</span>
-      <span id="legendReveal"><i class="dot rv"></i>発表日</span>
+      <button type="button" class="legend-btn" id="legendDue"><i class="dot due"></i>予定日</button>
+      <button type="button" class="legend-btn" id="legendToday"><i class="dot today"></i>今日</button>
+      <button type="button" class="legend-btn" id="legendReveal"><i class="dot rv"></i>発表日</button>
     </div>
   </section>
 
@@ -541,9 +548,19 @@
       html += `<div class="${cls.join(" ")}">${dayNum}</div>`;
     }
     grid.innerHTML = html;
+    const inView = d => d && d.getFullYear() === calY && d.getMonth() === calM;
+    $("legendToday").classList.toggle("current", inView(today));
+    $("legendDue").classList.toggle("current", inView(due));
+    $("legendReveal").classList.toggle("current", inView(revealAt));
   }
   $("calPrev").onclick = () => { calM--; if (calM < 0) { calM = 11; calY--; } renderCal(); };
   $("calNext").onclick = () => { calM++; if (calM > 11) { calM = 0; calY++; } renderCal(); };
+  // 凡例タップでその日の月へジャンプ
+  const jumpTo = d => { calY = d.getFullYear(); calM = d.getMonth(); renderCal(); };
+  $("legendToday").onclick = () => jumpTo(today);
+  $("legendDue").onclick = () => due && jumpTo(due);
+  $("legendReveal").onclick = () => revealAt && jumpTo(revealAt);
+  if (!due) $("legendDue").style.display = "none";
 
   /* ============ 背景バルーン ============ */
   (function floaters() {
