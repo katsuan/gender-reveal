@@ -377,7 +377,7 @@
   "use strict";
 
   /* ================= 設定 ================= */
-  const TAPS_TO_OPEN = 5;
+  const DEFAULT_TAPS = 5, MAX_TAPS = 20;
   const PREGNANCY_DAYS = 280;
   const GENDERS = {
     boy:      { label: "男の子", emoji: "👦💙", color: "--boy",  deep: "--boy-deep" },
@@ -414,6 +414,8 @@
     if (!p.gender && (g === "custom" || (g && p.label))) p.gender = "custom"; // カスタム
   }
   const P = readParams();
+  // タップ回数(?taps=) 1〜20、未指定は5
+  const TAPS_TO_OPEN = Math.min(MAX_TAPS, Math.max(1, parseInt(P.taps, 10) || DEFAULT_TAPS));
 
   /* ============ 復号(AES-GCM) ============ */
   // s = v1.<salt>.<iv>.<ciphertext>[.<key>]  key が無ければ合言葉モード
@@ -693,7 +695,9 @@
     root.style.removeProperty("--reveal"); root.style.removeProperty("--reveal-deep");
   }
 
-  const tapHints = ["ん？ 何か入ってる…", "ゴソゴソ…", "もうちょっと！", "ドキドキ…", ""];
+  // タップ回数に関わらず進み具合に応じてヒントを出す
+  const tapHints = ["ん？ 何か入ってる…", "ゴソゴソ…", "もうちょっと！", "ドキドキ…"];
+  const hintFor = n => n >= TAPS_TO_OPEN ? "" : tapHints[Math.min(tapHints.length - 1, Math.floor((n - 1) / TAPS_TO_OPEN * tapHints.length))];
   function sparkle(x, y) {
     const r = gift.getBoundingClientRect();
     ["✨", "⭐", "💫", "✨"].forEach((e, i) => {
@@ -711,16 +715,16 @@
     if (busy || taps >= TAPS_TO_OPEN) return;
     taps++;
     gift.classList.remove("idle");
-    gift.style.setProperty("--grow", 1 + taps * 0.07); // タップごとに少しずつ膨らむ
+    gift.style.setProperty("--grow", 1 + (taps / TAPS_TO_OPEN) * 0.35); // タップごとに少しずつ膨らむ
     sparkle(e.clientX || innerWidth / 2, e.clientY || innerHeight / 2);
     const left = TAPS_TO_OPEN - taps;
     $("remain").innerHTML = left ? `あと <b>${left}</b> 回タップ` : "";
     document.querySelectorAll(".tap-dot").forEach((d, i) => d.classList.toggle("on", i < taps));
     gift.classList.remove("shake-1", "shake-2", "shake-3"); void gift.offsetWidth;
-    gift.classList.add(taps < 3 ? "shake-1" : taps < TAPS_TO_OPEN ? "shake-2" : "shake-3");
+    gift.classList.add(taps >= TAPS_TO_OPEN ? "shake-3" : taps / TAPS_TO_OPEN < 0.5 ? "shake-1" : "shake-2");
     tone(300 + taps * 90, .12, "square", .08);
     if (navigator.vibrate) navigator.vibrate(30 + taps * 15);
-    $("hint").textContent = tapHints[taps - 1];
+    $("hint").textContent = hintFor(taps);
     if (taps >= TAPS_TO_OPEN) {
       busy = true; gift.classList.add("busy");
       await sleep(750);

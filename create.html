@@ -112,10 +112,11 @@
     </div>
 
     <details class="acc">
-      <summary><span>🔒 合言葉・発表日時</span><span class="opt">任意</span></summary>
+      <summary><span>🔒 合言葉・発表の設定</span><span class="opt">任意</span></summary>
       <div class="acc-body">
         <div><label>合言葉<span class="opt">おすすめ</span></label><input name="pass" placeholder="例: ひよこ"><p class="note" style="margin-top:6px">設定すると、合言葉を知らない人はURLを解析しても性別がわかりません。当日口頭やLINEで伝えてね。</p></div>
         <div><label>発表解禁日時</label><input name="reveal" type="datetime-local"><p class="note" style="margin-top:6px">この日時まで発表ボタンがロックされます。</p></div>
+        <div><label>プレゼントを開けるタップ回数</label><select name="taps"><option value="1">1回</option><option value="3">3回</option><option value="5" selected>5回（標準）</option><option value="7">7回</option><option value="10">10回</option><option value="15">15回</option><option value="20">20回</option></select><p class="note" style="margin-top:6px">多いほどじらせます。</p></div>
       </div>
     </details>
 
@@ -182,7 +183,7 @@
     return parts.join(".");
   }
 
-  const PUBLIC_KEYS = ["due", "reveal", "dad", "mom", "title"];
+  const PUBLIC_KEYS = ["due", "reveal", "dad", "mom", "title", "taps"];
   const SECRET_KEYS = ["gender", "name", "msg", "label", "emoji", "color"];
 
   form.addEventListener("submit", async e => {
