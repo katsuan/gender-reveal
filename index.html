@@ -328,7 +328,7 @@
     <div class="baby-name" id="babyName"></div>
     <div class="msg" id="msg"></div>
     <div class="actions">
-      <button class="pill" id="replayBtn">もう一度</button>
+      <button class="pill" id="replayBtn">トップに戻る</button>
       <button class="pill primary" id="shareBtn">シェア</button>
     </div>
   </div>
@@ -587,6 +587,27 @@
     const f = c.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 900;
     src.connect(f).connect(c.destination); src.start();
   }
+  // 箱を揺らす「ゴトゴト」音: 中身がぶつかるこもった打撃音をタップごとに強く・多く
+  function rattle(level) {
+    if (!soundOn()) return;
+    const c = audio();
+    const hits = 2 + level;               // 1回目3打 → 5回目7打
+    for (let i = 0; i < hits; i++) {
+      const t = c.currentTime + i * 0.07 + Math.random() * 0.02;
+      const len = Math.floor(c.sampleRate * 0.06);
+      const buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
+      for (let j = 0; j < len; j++) d[j] = (Math.random() * 2 - 1) * Math.pow(1 - j / len, 3);
+      const src = c.createBufferSource(); src.buffer = buf;
+      const f = c.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 350 + Math.random() * 250; f.Q.value = 1.2;
+      const g = c.createGain(); g.gain.value = 0.35 + level * 0.12;
+      src.connect(f).connect(g).connect(c.destination); src.start(t);
+      // 低いドンという胴鳴り
+      const o = c.createOscillator(), og = c.createGain();
+      o.type = "sine"; o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(60, t + 0.08);
+      og.gain.setValueAtTime(0.18 + level * 0.04, t); og.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+      o.connect(og).connect(c.destination); o.start(t); o.stop(t + 0.12);
+    }
+  }
   function fanfare() {
     [523, 659, 784, 1047].forEach((f, i) => tone(f, .35, "triangle", .22, i * .12));
     [784, 1047, 1319].forEach(f => tone(f, 1.2, "triangle", .12, .55));
@@ -617,7 +638,7 @@
         c: colors[Math.floor(Math.random() * colors.length)], life: 0, max: 400, shape: Math.random() < .25 ? "c" : "r",
       });
       if (!raf) loop();
-      if (Date.now() < end) setTimeout(drop, 60);
+      if (Date.now() < end && stage.classList.contains("show")) setTimeout(drop, 60);
     })();
   }
   function loop() {
@@ -660,7 +681,7 @@
     document.querySelectorAll(".tap-dot").forEach((d, i) => d.classList.toggle("on", i < taps));
     gift.classList.remove("shake-1", "shake-2", "shake-3"); void gift.offsetWidth;
     gift.classList.add(taps < 3 ? "shake-1" : taps < TAPS_TO_OPEN ? "shake-2" : "shake-3");
-    tone(300 + taps * 90, .12, "square", .08);
+    rattle(taps);
     if (navigator.vibrate) navigator.vibrate(30 + taps * 15);
     $("hint").textContent = tapHints[taps - 1];
     if (taps >= TAPS_TO_OPEN) { busy = true; await climax(); }
@@ -748,7 +769,15 @@
       box.classList.remove("shake-1"); void box.offsetWidth; box.classList.add("shake-1");
     }
   };
-  $("replayBtn").onclick = () => { stage.style.background = ""; resetStage(); };
+  // もう一度 → 発表前のトップ(カレンダー)へ戻る
+  $("replayBtn").onclick = () => {
+    stage.className = "stage";
+    stage.style.background = "";
+    document.body.classList.remove("revealed");
+    root.style.removeProperty("--reveal"); root.style.removeProperty("--reveal-deep");
+    parts = [];
+    scrollTo({ top: 0, behavior: "smooth" });
+  };
   $("shareBtn").onclick = async () => {
     const data = { title: document.title, text: "ベビーの性別発表ページです👶 ドキドキしながら開けてね！", url: location.href };
     try {
