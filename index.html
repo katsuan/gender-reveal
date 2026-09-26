@@ -573,39 +573,22 @@
     g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur);
     o.connect(g).connect(c.destination); o.start(t); o.stop(t + dur);
   }
-  function drumroll(sec) {
-    if (!soundOn()) return;
-    const c = audio(), len = c.sampleRate * sec;
-    const buf = c.createBuffer(1, len, c.sampleRate), data = buf.getChannelData(0);
-    for (let i = 0; i < len; i++) {
-      const t = i / c.sampleRate;
-      const rate = 14 + t * 10; // だんだん速く
-      const env = Math.pow((Math.sin(t * rate * Math.PI * 2) + 1) / 2, 6);
-      data[i] = (Math.random() * 2 - 1) * env * (0.25 + 0.6 * t / sec);
-    }
-    const src = c.createBufferSource(); src.buffer = buf;
-    const f = c.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 900;
-    src.connect(f).connect(c.destination); src.start();
-  }
-  // 箱を揺らす「ゴトゴト」音: 中身がぶつかるこもった打撃音をタップごとに強く・多く
-  function rattle(level) {
+  // 心音「ドクン、ドクン」: 低いサイン波の2連打を1秒周期で
+  function heartbeat(beats) {
     if (!soundOn()) return;
     const c = audio();
-    const hits = 2 + level;               // 1回目3打 → 5回目7打
-    for (let i = 0; i < hits; i++) {
-      const t = c.currentTime + i * 0.07 + Math.random() * 0.02;
-      const len = Math.floor(c.sampleRate * 0.06);
-      const buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
-      for (let j = 0; j < len; j++) d[j] = (Math.random() * 2 - 1) * Math.pow(1 - j / len, 3);
-      const src = c.createBufferSource(); src.buffer = buf;
-      const f = c.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 350 + Math.random() * 250; f.Q.value = 1.2;
-      const g = c.createGain(); g.gain.value = 0.35 + level * 0.12;
-      src.connect(f).connect(g).connect(c.destination); src.start(t);
-      // 低いドンという胴鳴り
-      const o = c.createOscillator(), og = c.createGain();
-      o.type = "sine"; o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(60, t + 0.08);
-      og.gain.setValueAtTime(0.18 + level * 0.04, t); og.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-      o.connect(og).connect(c.destination); o.start(t); o.stop(t + 0.12);
+    for (let i = 0; i < beats; i++) {
+      [0, 0.18].forEach((off, k) => {
+        const t = c.currentTime + i * 1.0 + off;
+        const o = c.createOscillator(), g = c.createGain();
+        o.type = "sine";
+        o.frequency.setValueAtTime(k ? 70 : 85, t);
+        o.frequency.exponentialRampToValueAtTime(40, t + 0.15);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(k ? 0.35 : 0.5, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+        o.connect(g).connect(c.destination); o.start(t); o.stop(t + 0.22);
+      });
     }
   }
   function fanfare() {
@@ -681,7 +664,7 @@
     document.querySelectorAll(".tap-dot").forEach((d, i) => d.classList.toggle("on", i < taps));
     gift.classList.remove("shake-1", "shake-2", "shake-3"); void gift.offsetWidth;
     gift.classList.add(taps < 3 ? "shake-1" : taps < TAPS_TO_OPEN ? "shake-2" : "shake-3");
-    rattle(taps);
+    tone(300 + taps * 90, .12, "square", .08);
     if (navigator.vibrate) navigator.vibrate(30 + taps * 15);
     $("hint").textContent = tapHints[taps - 1];
     if (taps >= TAPS_TO_OPEN) { busy = true; await climax(); }
@@ -694,8 +677,8 @@
     gift.style.display = "none"; $("taps").style.display = "none";
     $("hint").textContent = "運命の瞬間…";
     $("heart").style.display = "block";
-    drumroll(4.2);
-    await sleep(1700);
+    heartbeat(2);
+    await sleep(2000);
     $("heart").style.display = "none";
     $("hint").textContent = "";
     // 3・2・1
