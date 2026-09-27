@@ -263,6 +263,7 @@
   .pill.primary { background: var(--reveal); color: #fff; }
   .share-box { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 14px; animation: fadeUp .8s both 1.5s; }
   .pill.line-btn { background: var(--line-green); color: #fff; text-decoration: none; font-size: 16px; padding: 14px 32px; box-shadow: 0 6px 16px rgba(6, 199, 85, .3); }
+  .text-link { font-size: 12px; color: var(--ink-soft); }
   .share-note { font-size: 11px; color: var(--ink-soft); text-align: center; line-height: 1.6; }
   @keyframes zoomIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
   @keyframes fadeUp { 0% { transform: translateY(16px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
@@ -364,8 +365,9 @@
     <div class="baby-name" id="babyName"></div>
     <div class="msg" id="msg"></div>
     <div class="share-box">
-      <a class="pill line-btn" id="lineShareBtn" target="_blank" rel="noopener">💬 LINEで送る</a>
-      <p class="share-note">性別は書かずにリンクだけ送ります。<br>みんなにもドキドキしてもらおう🎁</p>
+      <a class="pill line-btn" id="lineFlexBtn" target="_blank" rel="noopener">💌 LINEでカードを送る</a>
+      <p class="share-note">性別は書かずに発表ページのカードを送ります。<br>みんなにもドキドキしてもらおう🎁</p>
+      <a class="text-link" id="lineShareBtn" target="_blank" rel="noopener">テキストで送る</a>
     </div>
     <div class="actions">
       <button class="pill" id="replayBtn">トップに戻る</button>
@@ -841,6 +843,32 @@
   // 共有文面には性別を含めない(転送先へのネタバレ防止)
   const SHARE_TEXT = "👶 ベビーの性別発表 👶\n男の子？女の子？プレゼントを開けて確かめてね🎁";
   $("lineShareBtn").href = `https://line.me/R/share?text=${encodeURIComponent(`${SHARE_TEXT}\n${location.href}`)}`;
+
+  // FlexSender(LIFF)にカード内容を渡して共有。create.html と同じ中立的なカード
+  const FLEX_SENDER = "https://liff.line.me/2011082239-Ej8nLTeE";
+  const NEUTRAL_COLOR = "#9b7fd1";
+  function buildFlexUrl() {
+    const parents = [P.dad, P.mom].filter(Boolean).join(" & ");
+    const lines = [
+      parents ? `${parents} より` : "",
+      due ? `出産予定日：${fmtDate(due)}` : "",
+      "プレゼントを開けて確かめてね🎁",
+      needsPass ? "🔑 開けるには合言葉が必要です" : "",
+    ].filter(Boolean);
+    const q = new URLSearchParams({
+      headerTitle: P.title || "ベビーの性別発表",
+      title: "👶 男の子？女の子？",
+      detail: lines.join("\n"),
+      showDate: "false",
+      theme: "custom",
+      customColor: NEUTRAL_COLOR,
+      showAction: "true",
+      actionLabel: "🎁 開けてみる",
+      actionUrl: location.href,
+    });
+    return `${FLEX_SENDER}?${q}`;
+  }
+  $("lineFlexBtn").href = buildFlexUrl();
   $("shareBtn").onclick = async () => {
     const data = { title: document.title, text: SHARE_TEXT, url: location.href };
     try {
