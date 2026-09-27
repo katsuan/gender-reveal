@@ -201,21 +201,35 @@
     return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
   }
 
-  // 性別で暗号文の長さが変わらないよう 128 バイト単位にパディングして AES-GCM で暗号化
-  async function encryptSecret(obj, pass) {
+  /* ============ 短縮URL(v2)の生成 ============
+   * ?p=<base64url> 1つにまとめる。形式は index.html の readV2 を参照
+   * 性別は1文字コードなので男女で暗号文の長さが変わらず、パディング不要
+   */
+  const GENDER_CODES = { boy: "b", girl: "g", "twins-boys": "B", "twins-girls": "G", "twins-mixed": "M", twins: "T", custom: "c" };
+  const PUB_SHORT = { due: "u", reveal: "r", dad: "f", mom: "m", title: "t", taps: "k" };
+  const SECRET_SHORT = { gender: "g", name: "n", msg: "s", label: "l", emoji: "e", color: "c" };
+  const compactDate = v => v.replace(/[-T:]/g, "");
+  const shorten = (obj, map) => Object.fromEntries(Object.entries(obj).map(([k, v]) => [map[k], v]));
+
+  async function buildToken(pub, sec, pass) {
     const rand = n => crypto.getRandomValues(new Uint8Array(n));
-    const key = pass || bytesToB64url(rand(16));
-    obj.pad = "";
-    const len = new TextEncoder().encode(JSON.stringify(obj)).length;
-    obj.pad = "x".repeat(Math.ceil((len + 1) / 128) * 128 - len);
-    const salt = rand(16), iv = rand(12);
-    const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(key), "PBKDF2", false, ["deriveKey"]);
+    const enc = new TextEncoder();
+    const pubShort = shorten({ ...pub, ...(pub.due && { due: compactDate(pub.due) }), ...(pub.reveal && { reveal: compactDate(pub.reveal) }) }, PUB_SHORT);
+    if (pubShort.k === "5") delete pubShort.k; // 既定値は省略
+    const pubBytes = Object.keys(pubShort).length ? enc.encode(JSON.stringify(pubShort)) : new Uint8Array(0);
+    const secShort = shorten({ ...sec, gender: GENDER_CODES[sec.gender] }, SECRET_SHORT);
+
+    const keyBytes = pass ? null : rand(12);
+    const password = pass || bytesToB64url(keyBytes);
+    const salt = rand(8), iv = rand(12);
+    const base = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
     const aes = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: 150000, hash: "SHA-256" },
       base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);
-    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, aes, new TextEncoder().encode(JSON.stringify(obj))));
-    const parts = ["v1", bytesToB64url(salt), bytesToB64url(iv), bytesToB64url(ct)];
-    if (!pass) parts.push(key);
-    return parts.join(".");
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, aes, enc.encode(JSON.stringify(secShort))));
+
+    const head = [2, keyBytes ? 1 : 0, pubBytes.length >> 8, pubBytes.length & 255];
+    const all = new Uint8Array([...head, ...pubBytes, ...salt, ...iv, ...ct, ...(keyBytes || [])]);
+    return bytesToB64url(all);
   }
 
   /* ============ LINE共有 ============ */
@@ -270,9 +284,8 @@
     }, {});
     const pub = pick(PUBLIC_KEYS), sec = pick(SECRET_KEYS);
     if (sec.gender === "twins") sec.gender = fd.get("twins"); // 双子は2人の性別で保存
-    const url = new URL("index.html", new URL("./", location.href));
-    if (Object.keys(pub).length) url.searchParams.set("d", b64urlEncode(JSON.stringify(pub)));
-    url.searchParams.set("s", await encryptSecret(sec, (fd.get("pass") || "").trim()));
+    const url = new URL("./", location.href); // index.html は省略
+    url.searchParams.set("p", await buildToken(pub, sec, (fd.get("pass") || "").trim()));
     $("url").textContent = url.href;
     $("open").href = url.href;
     $("lineFlex").href = buildFlexUrl(url.href, pub, !!(fd.get("pass") || "").trim());

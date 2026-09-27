@@ -420,14 +420,51 @@
     const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
     return new TextDecoder().decode(bytes);
   }
+  /* ============ URL形式 ============
+   * v2(現行): ?p=<base64url>  1パラメータにまとめた短縮形式
+   *   bytes = [2][flags][pubLen 2byte][pub JSON(短縮キー)][salt 8][iv 12][暗号文+tag][key 12 ※flags&1 のとき]
+   *   pub  : u=予定日YYYYMMDD r=解禁YYYYMMDDHHmm f=パパ m=ママ t=タイトル k=タップ回数
+   *   秘密 : g=性別コード(1文字) n=名前 s=メッセージ l/e/c=カスタム表示
+   * v1(旧) : ?d=<公開JSON>&s=v1.<salt>.<iv>.<ct>[.<key>]  互換のため読み込み可
+   */
+  const b64urlToBytes = s => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), c => c.charCodeAt(0));
+  const bytesToB64url = bytes => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const CODE_TO_GENDER = { b: "boy", g: "girl", B: "twins-boys", G: "twins-girls", M: "twins-mixed", T: "twins", c: "custom" };
+  const PUB_KEYS = { u: "due", r: "reveal", f: "dad", m: "mom", t: "title", k: "taps" };
+  const SECRET_KEYS = { g: "gender", n: "name", s: "msg", l: "label", e: "emoji", c: "color" };
+  const expandDate = v => v && v.length >= 8 ? `${v.slice(0, 4)}-${v.slice(4, 6)}-${v.slice(6, 8)}` + (v.length >= 12 ? `T${v.slice(8, 10)}:${v.slice(10, 12)}` : "") : v;
+
+  function readV2(token, p) {
+    const bytes = b64urlToBytes(token);
+    if (bytes[0] !== 2) throw new Error("unsupported");
+    const hasKey = bytes[1] & 1;
+    const pubLen = (bytes[2] << 8) | bytes[3];
+    let i = 4;
+    const pub = pubLen ? JSON.parse(new TextDecoder().decode(bytes.slice(i, i + pubLen))) : {};
+    i += pubLen;
+    for (const [k, v] of Object.entries(pub)) if (PUB_KEYS[k]) p[PUB_KEYS[k]] = String(v);
+    p.due = expandDate(p.due); p.reveal = expandDate(p.reveal);
+    const salt = bytes.slice(i, i + 8), iv = bytes.slice(i + 8, i + 20);
+    const end = hasKey ? bytes.length - 12 : bytes.length;
+    p.secret = { v: 2, salt, iv, ct: bytes.slice(i + 20, end), key: hasKey ? bytesToB64url(bytes.slice(end)) : null };
+  }
+
   function readParams() {
     const q = new URLSearchParams(location.search);
     let p = {};
-    if (q.get("d")) {
-      try { p = JSON.parse(b64urlDecode(q.get("d"))); } catch (e) { console.warn("d の解析に失敗", e); }
+    if (q.get("p")) {
+      try { readV2(q.get("p"), p); } catch (e) { console.warn("p の解析に失敗", e); }
+    } else {
+      if (q.get("d")) {
+        try { p = JSON.parse(b64urlDecode(q.get("d"))); } catch (e) { console.warn("d の解析に失敗", e); }
+      }
+      const s = q.get("s");
+      if (s) {
+        const [ver, salt, iv, ct, key] = s.split(".");
+        if (ver === "v1") p.secret = { v: 1, salt: b64urlToBytes(salt), iv: b64urlToBytes(iv), ct: b64urlToBytes(ct), key: key || null };
+      }
     }
-    for (const [k, v] of q.entries()) if (k !== "d" && k !== "s" && !(k in p)) p[k] = v;
-    p.secret = q.get("s") || null; // 暗号化された性別データ
+    for (const [k, v] of q.entries()) if (!["p", "d", "s"].includes(k) && !(k in p)) p[k] = v;
     normalizeGender(p);
     return p;
   }
@@ -441,21 +478,22 @@
   const TAPS_TO_OPEN = Math.min(MAX_TAPS, Math.max(1, parseInt(P.taps, 10) || DEFAULT_TAPS));
 
   /* ============ 復号(AES-GCM) ============ */
-  // s = v1.<salt>.<iv>.<ciphertext>[.<key>]  key が無ければ合言葉モード
-  const b64urlToBytes = s => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), c => c.charCodeAt(0));
-  const secretParts = P.secret ? P.secret.split(".") : null;
-  const needsPass = !!secretParts && !secretParts[4];
+  const needsPass = !!P.secret && !P.secret.key;
   async function decryptSecret(pass) {
-    const [ver, salt, iv, ct, key] = secretParts;
-    if (ver !== "v1") throw new Error("unsupported");
+    const { v, salt, iv, ct, key } = P.secret;
     const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(key || pass), "PBKDF2", false, ["deriveKey"]);
     const aes = await crypto.subtle.deriveKey(
-      { name: "PBKDF2", salt: b64urlToBytes(salt), iterations: 150000, hash: "SHA-256" },
+      { name: "PBKDF2", salt, iterations: 150000, hash: "SHA-256" },
       base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
-    const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64urlToBytes(iv) }, aes, b64urlToBytes(ct));
+    const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, aes, ct);
     const data = JSON.parse(new TextDecoder().decode(plain));
-    delete data.pad;
-    Object.assign(P, data);
+    if (v === 2) {
+      for (const [k, val] of Object.entries(data)) if (SECRET_KEYS[k]) P[SECRET_KEYS[k]] = val;
+      P.gender = CODE_TO_GENDER[data.g] || null;
+    } else {
+      delete data.pad;
+      Object.assign(P, data);
+    }
     normalizeGender(P);
     P.secret = null;
   }
