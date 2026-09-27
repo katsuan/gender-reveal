@@ -16,6 +16,7 @@
     --ink: #3d3450;
     --ink-soft: #7a7090;
     --line: #e6def0;
+    --line-green: #06c755;
     --card: rgba(255, 255, 255, 0.9);
     --shadow: 0 10px 30px rgba(90, 70, 130, 0.14);
     --radius-lg: 24px;
@@ -81,6 +82,9 @@
   .acc[open] summary::after { transform: rotate(90deg); }
   .acc-body { padding: 0 14px 16px; display: flex; flex-direction: column; gap: 14px; }
   #customBox, #twinsBox { display: none; }
+  .line-share { display: flex; flex-direction: column; gap: 10px; border-top: 1px dashed var(--line); padding-top: 14px; }
+  .btn.line { background: var(--line-green); box-shadow: 0 6px 16px rgba(6, 199, 85, .25); text-align: center; text-decoration: none; }
+  .btn.ghost-line { background: #fff; color: var(--line-green); box-shadow: 0 4px 12px rgba(0,0,0,.08); }
   .gender input[name="twins"]:checked + span { border-color: var(--gold); background: #fffaeb; }
   a { color: var(--girl-deep); }
 </style>
@@ -155,6 +159,12 @@
       <a class="btn" id="open" target="_blank" rel="noopener" style="text-align:center;text-decoration:none">開いてみる</a>
     </div>
     <p class="note">⚠️ 「開いてみる」を押すと自分にネタバレします。プレビューは解禁日時を未来にして確認するのがおすすめ。</p>
+    <div class="line-share">
+      <label>LINEで送る</label>
+      <a class="btn line" id="lineFlex" target="_blank" rel="noopener">💌 カードで送る(FlexSender)</a>
+      <a class="btn line ghost-line" id="lineText" target="_blank" rel="noopener">💬 テキストで送る</a>
+      <p class="note" id="lenWarn" style="display:none;color:var(--girl-deep)">URLが長すぎてLINEのボタンに入らない可能性があります。メッセージを短くしてください。</p>
+    </div>
   </section>
 </main>
 
@@ -195,6 +205,41 @@
     return parts.join(".");
   }
 
+  /* ============ LINE共有 ============ */
+  const FLEX_SENDER = "https://liff.line.me/2011082239-Ej8nLTeE";
+  const LINE_URI_MAX = 1000; // LINE の URI アクション上限
+  const NEUTRAL_COLOR = "#9b7fd1"; // 性別が推測されない中間色
+
+  function fmtDue(v) {
+    const [y, m, d] = v.split("-").map(Number);
+    return `${y}年${m}月${d}日`;
+  }
+  function buildFlexUrl(revealUrl, pub, hasPass) {
+    const parents = [pub.dad, pub.mom].filter(Boolean).join(" & ");
+    const lines = [
+      parents ? `${parents} より` : "",
+      pub.due ? `出産予定日：${fmtDue(pub.due)}` : "",
+      "プレゼントを開けて確かめてね🎁",
+      hasPass ? "🔑 合言葉は別で伝えるね" : "",
+    ].filter(Boolean);
+    const q = new URLSearchParams({
+      headerTitle: pub.title || "ベビーの性別発表",
+      title: "👶 男の子？女の子？",
+      detail: lines.join("\n"),
+      showDate: "false",
+      theme: "custom",
+      customColor: NEUTRAL_COLOR,
+      showAction: "true",
+      actionLabel: "🎁 開けてみる",
+      actionUrl: revealUrl,
+    });
+    return `${FLEX_SENDER}?${q}`;
+  }
+  function buildLineTextUrl(revealUrl) {
+    const text = `👶 ベビーの性別発表 👶\n男の子？女の子？ドキドキしながら開けてね🎁\n${revealUrl}`;
+    return `https://line.me/R/share?text=${encodeURIComponent(text)}`;
+  }
+
   const PUBLIC_KEYS = ["due", "reveal", "dad", "mom", "title", "taps"];
   const SECRET_KEYS = ["gender", "name", "msg", "label", "emoji", "color"];
 
@@ -217,6 +262,9 @@
     url.searchParams.set("s", await encryptSecret(sec, (fd.get("pass") || "").trim()));
     $("url").textContent = url.href;
     $("open").href = url.href;
+    $("lineFlex").href = buildFlexUrl(url.href, pub, !!(fd.get("pass") || "").trim());
+    $("lineText").href = buildLineTextUrl(url.href);
+    $("lenWarn").style.display = url.href.length > LINE_URI_MAX ? "block" : "none";
     $("out").classList.add("show");
     $("out").scrollIntoView({ behavior: "smooth" });
   });
