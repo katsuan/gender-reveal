@@ -773,7 +773,7 @@
     $("answer").classList.toggle("long", $("answer").textContent.length > 5);
     $("answerEmoji").textContent = P.emoji || g.emoji;
     $("answerEmoji").classList.toggle("many", Array.from($("answerEmoji").textContent).length > 3);
-    $("babyName").textContent = P.name ? `${P.name} ちゃん` : "";
+    $("babyName").textContent = P.name || ""; // 入力どおりに表示(「ちゃん」は付けない)
     $("msg").textContent = P.msg || "";
     $("result").classList.add("show");
 
