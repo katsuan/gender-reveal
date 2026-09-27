@@ -146,6 +146,7 @@
   @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 
   /* ===== 発表ボタン ===== */
+  .reveal-card { border: 2px solid color-mix(in srgb, var(--girl) 35%, var(--boy)); }
   .cta {
     width: 100%; border: none; border-radius: 99px; padding: 18px; font-family: inherit;
     font-size: 18px; font-weight: 800; color: #fff; cursor: pointer;
@@ -295,6 +296,14 @@
     <div class="question"><span class="b">👦 男の子</span><span class="or">or</span><span class="g">女の子 👧</span></div>
   </section>
 
+  <section class="card reveal-card">
+    <div class="label" id="revealLabel">👇 ボタンを押して発表を見てね</div>
+    <div id="revealCountdown"></div>
+    <button class="cta" id="startBtn">🎁 性別を発表する</button>
+    <div class="lock-note" id="lockNote"></div>
+    <label class="sound-toggle"><input type="checkbox" id="soundOn" checked> 🔊 効果音あり</label>
+  </section>
+
   <section class="card" id="dueCard">
     <div class="label" id="dueLabel">出産予定日まで</div>
     <div id="dueCountdown"></div>
@@ -318,13 +327,6 @@
     </div>
   </section>
 
-  <section class="card">
-    <div class="label" id="revealLabel">準備ができたら…</div>
-    <div id="revealCountdown"></div>
-    <button class="cta" id="startBtn">🎁 性別を発表する</button>
-    <div class="lock-note" id="lockNote"></div>
-    <label class="sound-toggle"><input type="checkbox" id="soundOn" checked> 🔊 効果音あり</label>
-  </section>
 
   <div class="footer"><a href="create.html">自分用の発表ページを作る</a></div>
 </main>
@@ -524,7 +526,7 @@
       $("lockNote").textContent = "🔒 お楽しみに…！";
     } else {
       btn.disabled = false;
-      $("revealLabel").textContent = revealAt ? "🎉 発表の時間です！" : "準備ができたら…";
+      $("revealLabel").textContent = revealAt ? "🎉 発表の時間です！" : "👇 ボタンを押して発表を見てね";
       $("revealCountdown").innerHTML = "";
       $("revealCountdown").style.marginBottom = "0";
       $("lockNote").textContent = "";
