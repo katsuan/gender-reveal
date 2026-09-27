@@ -15,6 +15,7 @@
     --girl: #f48fb1;
     --girl-deep: #d9557f;
     --gold: #f5c542;
+    --gold-deep: #c98a00;
     --bg-top: #fff8f0;
     --bg-bottom: #f3ecff;
     --ink: #3d3450;
@@ -235,6 +236,8 @@
     animation: zoomIn 1s cubic-bezier(.2,1.6,.4,1) both .2s;
     text-shadow: 0 6px 24px color-mix(in srgb, var(--reveal) 50%, transparent);
   }
+  .result .answer.long { font-size: 40px; }
+  .result .emoji.many { font-size: 52px; white-space: nowrap; }
   .result .emoji { font-size: 72px; animation: zoomIn 1s cubic-bezier(.2,1.6,.4,1) both .5s; }
   .result .baby-name { font-size: 20px; font-weight: 700; color: var(--reveal-deep); animation: fadeUp .8s both .9s; }
   .result .msg { font-size: 15px; line-height: 1.8; color: var(--ink); max-width: 340px; white-space: pre-wrap; animation: fadeUp .8s both 1.2s; }
@@ -337,7 +340,7 @@
   <div class="heart" id="heart">💓</div>
   <div class="taps" id="taps"></div>
   <div class="result" id="result">
-    <div class="it">IT'S A…</div>
+    <div class="it" id="lead">IT'S A…</div>
     <div class="answer" id="answer"></div>
     <div class="emoji" id="answerEmoji"></div>
     <div class="baby-name" id="babyName"></div>
@@ -371,11 +374,15 @@
   /* ================= 設定 ================= */
   const DEFAULT_TAPS = 5, MAX_TAPS = 20;
   const PREGNANCY_DAYS = 280;
+  // lead: 発表直前の一言 / label: 発表テキスト
   const GENDERS = {
-    boy:      { label: "男の子", emoji: "👦💙", color: "--boy",  deep: "--boy-deep" },
-    girl:     { label: "女の子", emoji: "👧🩷", color: "--girl", deep: "--girl-deep" },
-    twins:    { label: "双子！", emoji: "👶👶", color: "--gold", deep: "--gold" },
-    surprise: { label: "ヒミツ！", emoji: "🤫✨", color: "--gold", deep: "--gold" },
+    boy:            { lead: "IT'S A…",     label: "男の子",         emoji: "👦💙",   color: "--boy",  deep: "--boy-deep" },
+    girl:           { lead: "IT'S A…",     label: "女の子",         emoji: "👧🩷",   color: "--girl", deep: "--girl-deep" },
+    "twins-boys":   { lead: "IT'S TWINS…", label: "男の子ふたり！", emoji: "👦👦💙", color: "--boy",  deep: "--boy-deep" },
+    "twins-girls":  { lead: "IT'S TWINS…", label: "女の子ふたり！", emoji: "👧👧🩷", color: "--girl", deep: "--girl-deep" },
+    "twins-mixed":  { lead: "IT'S TWINS…", label: "男の子と女の子！", emoji: "👦💙👧🩷", color: "--gold", deep: "--gold-deep" },
+    twins:          { lead: "なんと…",     label: "双子ちゃん！",   emoji: "👶👶",   color: "--gold", deep: "--gold-deep" },
+    surprise:       { lead: "IT'S…",       label: "ヒミツ！",       emoji: "🤫✨",   color: "--gold", deep: "--gold-deep" },
   };
   const ALIASES = { m: "boy", male: "boy", 男: "boy", 男の子: "boy", f: "girl", female: "girl", 女: "girl", 女の子: "girl" };
 
@@ -739,7 +746,7 @@
   }
 
   function reveal() {
-    const g = GENDERS[P.gender] || { label: P.label || "？", emoji: P.emoji || "🎉", color: "--gold", deep: "--gold" };
+    const g = GENDERS[P.gender] || { lead: "IT'S…", label: P.label || "？", emoji: P.emoji || "🎉", color: "--gold", deep: "--gold-deep" };
     const color = P.color || cssVar(g.color), deep = P.color || cssVar(g.deep);
     root.style.setProperty("--reveal", color);
     root.style.setProperty("--reveal-deep", deep);
@@ -747,14 +754,17 @@
     stage.style.background = `radial-gradient(circle at 50% 40%, #fff 0%, color-mix(in srgb, ${color} 35%, #fff) 80%)`;
     document.body.classList.add("revealed");
 
+    $("lead").textContent = P.lead || g.lead;
     $("answer").textContent = P.label || g.label;
+    $("answer").classList.toggle("long", $("answer").textContent.length > 5);
     $("answerEmoji").textContent = P.emoji || g.emoji;
+    $("answerEmoji").classList.toggle("many", Array.from($("answerEmoji").textContent).length > 3);
     $("babyName").textContent = P.name ? `${P.name} ちゃん` : "";
     $("msg").textContent = P.msg || "";
     $("result").classList.add("show");
 
-    const palette = P.gender === "boy" ? [color, deep, "#ffffff", "#bfe3ff", cssVar("--gold")]
-      : P.gender === "girl" ? [color, deep, "#ffffff", "#ffd6e5", cssVar("--gold")]
+    const palette = /boy/.test(P.gender) ? [color, deep, "#ffffff", "#bfe3ff", cssVar("--gold")]
+      : /girl/.test(P.gender) ? [color, deep, "#ffffff", "#ffd6e5", cssVar("--gold")]
       : [cssVar("--boy"), cssVar("--girl"), cssVar("--gold"), "#fff"];
     fanfare();
     if (navigator.vibrate) navigator.vibrate([100, 50, 200]);

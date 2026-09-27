@@ -80,7 +80,8 @@
   .acc summary::after { content: "›"; margin-left: auto; font-size: 20px; color: var(--ink-soft); transition: transform .2s; }
   .acc[open] summary::after { transform: rotate(90deg); }
   .acc-body { padding: 0 14px 16px; display: flex; flex-direction: column; gap: 14px; }
-  #customBox { display: none; }
+  #customBox, #twinsBox { display: none; }
+  .gender input[name="twins"]:checked + span { border-color: var(--gold); background: #fffaeb; }
   a { color: var(--girl-deep); }
 </style>
 </head>
@@ -99,6 +100,16 @@
         <label><input type="radio" name="gender" value="custom"><span>✏️ カスタム</span></label>
       </div>
       <p class="err-msg">性別を選んでください</p>
+    </div>
+    <div class="field" id="twinsBox">
+      <label>ふたりの性別</label>
+      <div class="gender">
+        <label><input type="radio" name="twins" value="twins-boys"><span>👦👦 男の子×2</span></label>
+        <label><input type="radio" name="twins" value="twins-girls"><span>👧👧 女の子×2</span></label>
+        <label><input type="radio" name="twins" value="twins-mixed"><span>👦👧 男女</span></label>
+        <label><input type="radio" name="twins" value="twins"><span>🤫 まだナイショ</span></label>
+      </div>
+      <p class="err-msg">ふたりの性別を選んでください</p>
     </div>
     <div id="customBox" class="row">
       <div><label>表示テキスト</label><input name="label" placeholder="男の子と女の子！"></div>
@@ -156,6 +167,7 @@
   form.addEventListener("change", e => {
     e.target.closest(".field")?.classList.remove("err");
     $("customBox").style.display = form.gender.value === "custom" ? "grid" : "none";
+    $("twinsBox").style.display = form.gender.value === "twins" ? "block" : "none";
   });
 
   function b64urlEncode(str) {
@@ -189,7 +201,7 @@
   form.addEventListener("submit", async e => {
     e.preventDefault();
     const fd = new FormData(form);
-    const miss = { fGender: !fd.get("gender"), fDue: !fd.get("due") };
+    const miss = { fGender: !fd.get("gender"), twinsBox: fd.get("gender") === "twins" && !fd.get("twins"), fDue: !fd.get("due") };
     Object.entries(miss).forEach(([id, bad]) => $(id).classList.toggle("err", bad));
     const first = Object.keys(miss).find(k => miss[k]);
     if (first) { $(first).scrollIntoView({ behavior: "smooth", block: "center" }); return; }
@@ -199,6 +211,7 @@
       return o;
     }, {});
     const pub = pick(PUBLIC_KEYS), sec = pick(SECRET_KEYS);
+    if (sec.gender === "twins") sec.gender = fd.get("twins"); // 双子は2人の性別で保存
     const url = new URL("index.html", new URL("./", location.href));
     if (Object.keys(pub).length) url.searchParams.set("d", b64urlEncode(JSON.stringify(pub)));
     url.searchParams.set("s", await encryptSecret(sec, (fd.get("pass") || "").trim()));
