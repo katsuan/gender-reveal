@@ -114,7 +114,6 @@
   #twinsBox .em { display: block; font-size: 22px; line-height: 1.3; }
   .line-share { display: flex; flex-direction: column; gap: 10px; border-top: 1px dashed var(--line); padding-top: 14px; }
   .btn.line { background: var(--line-green); box-shadow: 0 6px 16px rgba(6, 199, 85, .25); text-align: center; text-decoration: none; }
-  .btn.ghost-line { background: #fff; color: var(--line-green); box-shadow: 0 4px 12px rgba(0,0,0,.08); }
   .gender input[name="twins"]:checked + span { border-color: var(--gold); background: #fffaeb; }
   a { color: var(--girl-deep); }
 </style>
@@ -192,14 +191,13 @@
     <label>🎉 できました！ 発表ページのURL</label>
     <div class="url" id="url"></div>
     <div class="btns">
-      <button class="btn ghost" id="copy" type="button">URLをコピー</button>
+      <button class="btn ghost" id="copy" type="button">リンクをコピー</button>
       <a class="btn" id="open" target="_blank" rel="noopener" style="text-align:center;text-decoration:none">開いてみる</a>
     </div>
     <p class="note">⚠️ 「開いてみる」で発表まで進むと、答えが見えてしまいます。見た目だけ確かめたいときは、発表してよい日時を先の日付にしてから開くのがおすすめです。</p>
     <div class="line-share">
       <label>③ LINEで家族に送る</label>
       <a class="btn line" id="lineFlex" target="_blank" rel="noopener">💌 カードで送る（おすすめ）</a>
-      <a class="btn line ghost-line" id="lineText" target="_blank" rel="noopener">💬 文字だけで送る</a>
       <p class="note" id="lenWarn" style="display:none;color:var(--girl-deep)">URLが長すぎて、LINEのカードのボタンに入らないかもしれません。メッセージを短くしてください。</p>
     </div>
   </section>
@@ -294,10 +292,6 @@
     });
     return `${FLEX_SENDER}?${q}`;
   }
-  function buildLineTextUrl(revealUrl) {
-    const text = `👶 ベビーの性別発表 👶\n男の子？女の子？ドキドキしながら開けてね🎁\n${revealUrl}`;
-    return `https://line.me/R/share?text=${encodeURIComponent(text)}`;
-  }
 
   const PUBLIC_KEYS = ["due", "reveal", "dad", "mom", "title", "taps"];
   const SECRET_KEYS = ["gender", "name", "msg", "label", "emoji", "color"];
@@ -321,15 +315,16 @@
     $("url").textContent = url.href;
     $("open").href = url.href;
     $("lineFlex").href = buildFlexUrl(url.href, pub, !!(fd.get("pass") || "").trim());
-    $("lineText").href = buildLineTextUrl(url.href);
     $("lenWarn").style.display = url.href.length > LINE_URI_MAX ? "block" : "none";
     $("out").classList.add("show");
     $("out").scrollIntoView({ behavior: "smooth" });
   });
 
+  // 案内文つきでコピー。LINEなどに貼り付ければそのまま送れる(旧「文字だけで送る」の役目もここに集約)
   $("copy").onclick = async () => {
-    try { await navigator.clipboard.writeText($("url").textContent); $("copy").textContent = "コピーしました！"; }
-    catch { prompt("長押ししてコピーしてください", $("url").textContent); }
+    const text = `👶 ベビーの性別発表 👶\n男の子？女の子？ドキドキしながら開けてね🎁\n${$("url").textContent}`;
+    try { await navigator.clipboard.writeText(text); $("copy").textContent = "コピーしました！"; }
+    catch { prompt("長押ししてコピーしてください", text); }
   };
 })();
 </script>

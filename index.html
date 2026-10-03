@@ -312,7 +312,6 @@
   .pill.primary { background: var(--reveal); color: #fff; }
   .share-box { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 14px; animation: lateIn 1.2s ease both 4s; }
   .pill.line-btn { background: var(--line-green); color: #fff; text-decoration: none; font-size: 18px; padding: 16px 32px; box-shadow: 0 6px 16px rgba(6, 199, 85, .3); }
-  .text-link { font-size: 15px; color: var(--ink-soft); }
   .share-note { font-size: 14px; color: var(--ink-soft); text-align: center; line-height: 1.6; }
   @keyframes zoomIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
   @keyframes fadeUp { 0% { transform: translateY(16px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
@@ -418,7 +417,6 @@
     <div class="share-box">
       <a class="pill line-btn" id="lineFlexBtn" target="_blank" rel="noopener">💌 LINEで家族にも送る</a>
       <p class="share-note">性別は書かずに、このページだけを送ります。<br>受け取った人も、プレゼントを開けて楽しめます🎁</p>
-      <a class="text-link" id="lineShareBtn" target="_blank" rel="noopener">文字だけで送る</a>
     </div>
     <div class="actions">
       <button class="pill" id="againBtn">🔁 もう一度見る</button>
@@ -1007,7 +1005,6 @@
   $("againBtn").onclick = () => { parts = []; stage.style.background = ""; resetStage(); };
   // 共有文面には性別を含めない(転送先へのネタバレ防止)
   const SHARE_TEXT = "👶 ベビーの性別発表 👶\n男の子？女の子？プレゼントを開けて確かめてね🎁";
-  $("lineShareBtn").href = `https://line.me/R/share?text=${encodeURIComponent(`${SHARE_TEXT}\n${location.href}`)}`;
 
   // FlexSender(LIFF)にカード内容を渡して共有。create.html と同じ中立的なカード
   const FLEX_SENDER = "https://liff.line.me/2011082239-Ej8nLTeE";
@@ -1034,12 +1031,11 @@
     return `${FLEX_SENDER}?${q}`;
   }
   $("lineFlexBtn").href = buildFlexUrl();
+  // 案内文つきでコピー。LINEなどに貼り付ければそのまま送れる(旧「文字だけで送る」の役目もここに集約)
   $("shareBtn").onclick = async () => {
-    const data = { title: document.title, text: SHARE_TEXT, url: location.href };
-    try {
-      if (navigator.share) await navigator.share(data);
-      else { await navigator.clipboard.writeText(location.href); $("shareBtn").textContent = "コピーしました！"; }
-    } catch (_) {}
+    const text = `${SHARE_TEXT}\n${location.href}`;
+    try { await navigator.clipboard.writeText(text); $("shareBtn").textContent = "コピーしました！"; }
+    catch (_) { prompt("長押ししてコピーしてください", text); }
   };
   // ステージ外(結果画面)でESCで閉じる
   addEventListener("keydown", e => { if (e.key === "Escape" && !busy) stage.className = "stage"; });
