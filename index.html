@@ -181,7 +181,6 @@
   .dot.due { background: linear-gradient(135deg, var(--boy), var(--girl)); }
   .dot.today { box-shadow: inset 0 0 0 2px var(--ink-soft); }
   .dot.rv { background: color-mix(in srgb, var(--gold) 50%, #fff); }
-  .dot.ms { background: #e6dcf5; box-shadow: inset 0 -3px 0 var(--girl-deep); }
 
   @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 
@@ -674,18 +673,11 @@
   const today = new Date();
   let calY, calM;
   calY = today.getFullYear(); calM = today.getMonth(); // ジャンプピルの先頭「今日」の月から
-  // 予定日まで「あと○日」がきりの良い日(ジャンプピルと日付一覧で使う)
-  const MILESTONES = [200, 150, 100, 50, 30, 10, 1];
-  const daysToDue = d => due ? Math.round((startOfDay(due) - startOfDay(d)) / 864e5) : null;
-  const milestoneDate = n => new Date(due.getFullYear(), due.getMonth(), due.getDate() - n);
-  // 今日より後で一番近い節目。MILESTONES は大きい順
-  const nextMilestone = due ? MILESTONES.find(n => n < daysToDue(today)) : undefined;
-  // ジャンプピル: 今日 → (発表日) → あと○日 → 予定日 を日付順に。過去の日は出さない
+  // ジャンプピル: 今日 → (発表日) → 予定日 を日付順に。過去の日は出さない
   const isAhead = d => d && startOfDay(d) > startOfDay(today);
   const jumps = [
     { label: "今日", dot: "today", date: today },
     isAhead(revealAt) && { label: "発表日", dot: "rv", date: revealAt },
-    nextMilestone && { label: `あと${nextMilestone}日`, dot: "ms", date: milestoneDate(nextMilestone) },
     isAhead(due) && { label: "予定日", dot: "due", date: due },
   ].filter(Boolean).sort((a, b) => a.date - b.date);
 
@@ -730,7 +722,6 @@
   $("calLegend").onclick = e => { const b = e.target.closest(".legend-btn"); if (b) jumpTo(jumps[b.dataset.i].date); };
   // カレンダーが苦手な人向けに、日付を文字でも並べる(日付順)
   $("keyDates").innerHTML = [
-    nextMilestone && { date: milestoneDate(nextMilestone), html: `<span>🎯 あと${nextMilestone}日</span><b>${fmtDateW(milestoneDate(nextMilestone))}</b>` },
     due && { date: due, html: `<span>👶 出産予定日</span><b>${fmtDateW(due)}</b>` },
     revealAt && { date: revealAt, html: `<span>🎁 発表</span><b>${fmtDateW(revealAt)} ${fmtTime(revealAt)}</b>` },
   ].filter(Boolean).sort((a, b) => a.date - b.date).map(k => `<div>${k.html}</div>`).join("");
