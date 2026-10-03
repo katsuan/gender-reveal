@@ -102,6 +102,8 @@
   .acc[open] summary::after { transform: rotate(90deg); }
   .acc-body { padding: 0 14px 16px; display: flex; flex-direction: column; gap: 14px; }
   #customBox, #twinsBox { display: none; }
+  /* 双子の選択肢は発表画面と同じ絵文字を上、言葉を下に */
+  #twinsBox .em { display: block; font-size: 22px; line-height: 1.3; }
   .line-share { display: flex; flex-direction: column; gap: 10px; border-top: 1px dashed var(--line); padding-top: 14px; }
   .btn.line { background: var(--line-green); box-shadow: 0 6px 16px rgba(6, 199, 85, .25); text-align: center; text-decoration: none; }
   .btn.ghost-line { background: #fff; color: var(--line-green); box-shadow: 0 4px 12px rgba(0,0,0,.08); }
@@ -119,8 +121,8 @@
     <div class="field" id="fGender">
       <label>性別<span class="req">必須</span></label>
       <div class="gender">
-        <label><input type="radio" name="gender" value="boy"><span>👦 男の子</span></label>
-        <label><input type="radio" name="gender" value="girl"><span>👧 女の子</span></label>
+        <label><input type="radio" name="gender" value="boy"><span>👦💙 男の子</span></label>
+        <label><input type="radio" name="gender" value="girl"><span>👧🩷 女の子</span></label>
         <label><input type="radio" name="gender" value="twins"><span>👶👶 双子</span></label>
         <label><input type="radio" name="gender" value="custom"><span>✏️ 自由に書く</span></label>
       </div>
@@ -129,10 +131,10 @@
     <div class="field" id="twinsBox">
       <label>ふたりの性別</label>
       <div class="gender">
-        <label><input type="radio" name="twins" value="twins-boys"><span>👦👦 男の子×2</span></label>
-        <label><input type="radio" name="twins" value="twins-girls"><span>👧👧 女の子×2</span></label>
-        <label><input type="radio" name="twins" value="twins-mixed"><span>👦👧 男女</span></label>
-        <label><input type="radio" name="twins" value="twins"><span>🤫 まだナイショ</span></label>
+        <label><input type="radio" name="twins" value="twins-boys"><span><b class="em">👦👦💙</b>男の子ふたり</span></label>
+        <label><input type="radio" name="twins" value="twins-girls"><span><b class="em">👧👧🩷</b>女の子ふたり</span></label>
+        <label><input type="radio" name="twins" value="twins-mixed"><span><b class="em">👦💙👧🩷</b>男の子と女の子</span></label>
+        <label><input type="radio" name="twins" value="twins"><span><b class="em">👶👶</b>性別はナイショ</span></label>
       </div>
       <p class="err-msg">ふたりの性別を選んでください</p>
     </div>
@@ -148,15 +150,6 @@
     </div>
 
     <details class="acc">
-      <summary><span>🔒 合言葉・発表日時</span><span class="opt">なくてもOK</span></summary>
-      <div class="acc-body">
-        <div><label>合言葉<span class="opt">おすすめ</span></label><input name="pass" placeholder="例: ひよこ"><p class="note" style="margin-top:6px">合言葉を知っている人だけが答えを見られます。合言葉はURLとは別に、LINEや電話で伝えてね。</p></div>
-        <div><label>発表してよい日時</label><input name="reveal" type="datetime-local"><p class="note" style="margin-top:6px">この日時になるまで、発表ボタンは押せません。みんなで同時に見たいときに。</p></div>
-        <div><label>プレゼントを開けるまでのタップ回数</label><select name="taps"><option value="1">1回</option><option value="3">3回</option><option value="5" selected>5回（標準）</option><option value="7">7回</option><option value="10">10回</option><option value="15">15回</option><option value="20">20回</option></select><p class="note" style="margin-top:6px">多いほどドキドキが長くなります。おじいちゃん・おばあちゃんには3〜5回がおすすめ。</p></div>
-      </div>
-    </details>
-
-    <details class="acc">
       <summary><span>✨ 名前・メッセージ</span><span class="opt">なくてもOK</span></summary>
       <div class="acc-body">
         <div class="row">
@@ -166,6 +159,15 @@
         <div><label>赤ちゃんの名前・愛称</label><input name="name" placeholder="べびちゃん"></div>
         <div><label>ページのタイトル</label><input name="title" placeholder="ベビーの性別発表"></div>
         <div><label>発表後のメッセージ</label><textarea name="msg" placeholder="元気に生まれてきてね！"></textarea></div>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary><span>🔒 合言葉・発表日時</span><span class="opt">なくてもOK</span></summary>
+      <div class="acc-body">
+        <div><label>合言葉<span class="opt">おすすめ</span></label><input name="pass" placeholder="例: ひよこ"><p class="note" style="margin-top:6px">合言葉を知っている人だけが答えを見られます。合言葉はURLとは別に、LINEや電話で伝えてね。</p></div>
+        <div><label>発表してよい日時</label><input name="reveal" type="datetime-local"><p class="note" style="margin-top:6px">この日時になるまで、発表ボタンは押せません。みんなで同時に見たいときに。</p></div>
+        <div><label>プレゼントを開けるまでのタップ回数</label><select name="taps"><option value="1">1回</option><option value="3">3回</option><option value="5" selected>5回（標準）</option><option value="7">7回</option><option value="10">10回</option><option value="15">15回</option><option value="20">20回</option></select><p class="note" style="margin-top:6px">多いほどドキドキが長くなります。おじいちゃん・おばあちゃんには3〜5回がおすすめ。</p></div>
       </div>
     </details>
 
