@@ -86,6 +86,8 @@
   .out.show { display: flex; }
   .url { font-size: 13px; word-break: break-all; background: #fff; border: 1px dashed var(--line); border-radius: var(--radius-md); padding: 12px; color: var(--ink-soft); }
   .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .btns .btn { font-size: 16px; padding: 16px 8px; white-space: nowrap; } /* 2列でも折り返さない */
+  #exampleCopy { width: 100%; }
   .note { font-size: 14px; color: var(--ink-soft); line-height: 1.7; }
   .req { font-size: 12px; font-weight: 700; color: #fff; background: var(--girl-deep); border-radius: 99px; padding: 2px 8px; margin-left: 6px; vertical-align: 1px; }
   .err-msg { display: none; font-size: 15px; color: var(--girl-deep); margin-top: 6px; font-weight: 700; }
@@ -112,6 +114,9 @@
   .color-preview { flex: 1; min-width: 0; font-size: 20px; font-weight: 800; line-height: 1.3; overflow-wrap: anywhere; }
   /* 双子の選択肢は発表画面と同じ絵文字を上、言葉を下に */
   #twinsBox .em { display: block; font-size: 22px; line-height: 1.3; }
+  /* 送るときの例文: 全文を見せてからコピーさせる */
+  .example summary { cursor: pointer; font-size: 16px; font-weight: 700; padding: 6px 0; }
+  .example-text { white-space: pre-wrap; overflow-wrap: anywhere; background: #fff; border: 1px dashed var(--line); border-radius: var(--radius-md); padding: 12px; margin: 8px 0 10px; font-size: 15px; line-height: 1.7; }
   .line-share { display: flex; flex-direction: column; gap: 10px; border-top: 1px dashed var(--line); padding-top: 14px; }
   .btn.line { background: var(--line-green); box-shadow: 0 6px 16px rgba(6, 199, 85, .25); text-align: center; text-decoration: none; }
   .gender input[name="twins"]:checked + span { border-color: var(--gold); background: #fffaeb; }
@@ -199,6 +204,11 @@
       <label>③ LINEで家族に送る</label>
       <a class="btn line" id="lineFlex" target="_blank" rel="noopener">💌 カードで送る（おすすめ）</a>
       <p class="note" id="lenWarn" style="display:none;color:var(--girl-deep)">URLが長すぎて、LINEのカードのボタンに入らないかもしれません。メッセージを短くしてください。</p>
+      <details class="example" open>
+        <summary>✉️ 自分で送るときの例文</summary>
+        <p class="example-text" id="exampleText"></p>
+        <button class="btn ghost" id="exampleCopy" type="button">この例文をコピー</button>
+      </details>
     </div>
   </section>
 </main>
@@ -315,16 +325,42 @@
     $("url").textContent = url.href;
     $("open").href = url.href;
     $("lineFlex").href = buildFlexUrl(url.href, pub, !!(fd.get("pass") || "").trim());
+    $("exampleText").textContent = buildExample(url.href, !!(fd.get("pass") || "").trim(), pub.reveal);
+    $("exampleCopy").textContent = "この例文をコピー";
     $("lenWarn").style.display = url.href.length > LINE_URI_MAX ? "block" : "none";
     $("out").classList.add("show");
     $("out").scrollIntoView({ behavior: "smooth" });
   });
 
-  // 案内文つきでコピー。LINEなどに貼り付ければそのまま送れる(旧「文字だけで送る」の役目もここに集約)
-  $("copy").onclick = async () => {
-    const text = `👶 ベビーの性別発表 👶\n男の子？女の子？ドキドキしながら開けてね🎁\n${$("url").textContent}`;
-    try { await navigator.clipboard.writeText(text); $("copy").textContent = "コピーしました！"; }
+  // 送るときの例文。性別は書かない。合言葉そのものも書かない
+  // "2026-12-24T19:00" → "12月24日(木) 19時"
+  function fmtReveal(v) {
+    const d = new Date(v);
+    if (isNaN(d)) return "";
+    return `${d.getMonth() + 1}月${d.getDate()}日(${"日月火水木金土"[d.getDay()]}) ${d.getHours()}時${d.getMinutes() ? d.getMinutes() + "分" : ""}`;
+  }
+  function buildExample(revealUrl, hasPass, reveal) {
+    const when = reveal ? fmtReveal(reveal) : "";
+    return [
+      "👶 赤ちゃんの性別発表です！",
+      "男の子かな？女の子かな？",
+      "リンクからプレゼントを開けてみてね🎁",
+      when ? `🕖 ${when}から開けられるよ` : "",
+      hasPass ? "🔑 合言葉はあとで伝えるね" : "",
+      revealUrl,
+    ].filter(Boolean).join("\n");
+  }
+  // 例文は画面に全文出しているので、そのままコピー
+  $("exampleCopy").onclick = async () => {
+    const text = $("exampleText").textContent;
+    try { await navigator.clipboard.writeText(text); $("exampleCopy").textContent = "コピーしました！"; }
     catch { prompt("長押ししてコピーしてください", text); }
+  };
+
+  // ボタン名どおりリンクだけをコピー(見えない文を混ぜない)
+  $("copy").onclick = async () => {
+    try { await navigator.clipboard.writeText($("url").textContent); $("copy").textContent = "コピーしました！"; }
+    catch { prompt("長押ししてコピーしてください", $("url").textContent); }
   };
 })();
 </script>
