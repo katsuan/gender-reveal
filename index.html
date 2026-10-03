@@ -799,8 +799,15 @@
   /* ============ 紙吹雪 ============ */
   const cv = $("confetti"), ctx = cv.getContext("2d");
   let parts = [], raf = null;
-  function resize() { cv.width = innerWidth * devicePixelRatio; cv.height = innerHeight * devicePixelRatio; ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0); }
-  addEventListener("resize", resize); resize();
+  // キャンバスは実際の表示サイズ(clientWidth/Height)に合わせる。スマホでツールバーが出入りすると
+  // innerHeight だけ変わって resize が来ないことがあるので、visualViewport の変化でも合わせ直す
+  function resize() {
+    cv.width = cv.clientWidth * devicePixelRatio; cv.height = cv.clientHeight * devicePixelRatio;
+    ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  }
+  addEventListener("resize", resize); window.visualViewport?.addEventListener("resize", resize); resize();
+  // 画面の高さではなくキャンバス全体を消す(一部だけ消し残して紙吹雪が帯状に残るのを防ぐ)
+  function clearAll() { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height); ctx.restore(); }
   function burst(colors, count = 180, origin = { x: innerWidth / 2, y: innerHeight * .45 }) {
     for (let i = 0; i < count; i++) {
       const a = Math.random() * Math.PI * 2, sp = 4 + Math.random() * 9;
@@ -825,8 +832,8 @@
     })();
   }
   function loop() {
-    ctx.clearRect(0, 0, innerWidth, innerHeight);
-    parts = parts.filter(p => p.life < p.max && p.y < innerHeight + 40);
+    clearAll();
+    parts = parts.filter(p => p.life < p.max && p.y < cv.clientHeight + 40);
     for (const p of parts) {
       p.life++; p.vy += .18; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
       ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c;
@@ -836,7 +843,7 @@
       ctx.restore();
     }
     raf = parts.length ? requestAnimationFrame(loop) : null;
-    if (!raf) ctx.clearRect(0, 0, innerWidth, innerHeight);
+    if (!raf) clearAll();
   }
 
   /* ============ 演出シーケンス ============ */
