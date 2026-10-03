@@ -102,6 +102,14 @@
   .acc[open] summary::after { transform: rotate(90deg); }
   .acc-body { padding: 0 14px 16px; display: flex; flex-direction: column; gap: 14px; }
   #customBox, #twinsBox { display: none; }
+  /* 色: 共通の余白で見本がつぶれないよう大きな四角にし、横に発表の見え方を出す */
+  #customBox .color-field { grid-column: 1 / -1; }
+  .color-pick { display: flex; align-items: center; gap: 12px; }
+  input[type=color] { flex: none; width: 64px; height: 56px; padding: 4px; cursor: pointer; }
+  input[type=color]::-webkit-color-swatch-wrapper { padding: 0; }
+  input[type=color]::-webkit-color-swatch { border: none; border-radius: 8px; }
+  input[type=color]::-moz-color-swatch { border: none; border-radius: 8px; }
+  .color-preview { flex: 1; min-width: 0; font-size: 20px; font-weight: 800; line-height: 1.3; overflow-wrap: anywhere; }
   /* 双子の選択肢は発表画面と同じ絵文字を上、言葉を下に */
   #twinsBox .em { display: block; font-size: 22px; line-height: 1.3; }
   .line-share { display: flex; flex-direction: column; gap: 10px; border-top: 1px dashed var(--line); padding-top: 14px; }
@@ -139,9 +147,15 @@
       <p class="err-msg">ふたりの性別を選んでください</p>
     </div>
     <div id="customBox" class="row">
-      <div><label>発表する言葉</label><input name="label" placeholder="男の子と女の子！"></div>
       <div><label>絵文字</label><input name="emoji" placeholder="👦👧"></div>
-      <div><label>色</label><input name="color" type="color" value="#f5c542"></div>
+      <div><label>発表する言葉</label><input name="label" placeholder="男の子と女の子！"></div>
+      <div class="color-field">
+        <label>色<span class="opt">四角を押して選ぶ</span></label>
+        <div class="color-pick">
+          <input name="color" type="color" value="#f5c542" aria-label="発表の色">
+          <span class="color-preview" id="colorPreview"></span>
+        </div>
+      </div>
     </div>
     <div class="field" id="fDue">
       <label>出産予定日<span class="opt">なくてもOK</span></label>
@@ -196,6 +210,14 @@
   "use strict";
   const $ = id => document.getElementById(id);
   const form = $("form");
+
+  // 自由に書く: 選んだ色で「絵文字 言葉」がどう見えるかを表示
+  function updateColorPreview() {
+    $("colorPreview").style.color = form.color.value;
+    $("colorPreview").textContent = `${form.emoji.value.trim() || "👦👧"} ${form.label.value.trim() || "男の子と女の子！"}`;
+  }
+  form.addEventListener("input", updateColorPreview);
+  updateColorPreview();
 
   form.addEventListener("change", e => {
     e.target.closest(".field")?.classList.remove("err");
