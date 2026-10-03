@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>🎁 性別発表ページを作る</title>
-<meta name="description" content="性別・予定日を入れるだけで、ドキドキの性別発表ページが作れます。">
+<meta name="description" content="性別を選ぶだけで、ドキドキの性別発表ページが作れます。">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ベビーの性別発表">
 <meta property="og:title" content="🎁 性別発表ページを作る">
-<meta property="og:description" content="性別・予定日を入れるだけで、ドキドキの性別発表ページが作れます。">
+<meta property="og:description" content="性別を選ぶだけで、ドキドキの性別発表ページが作れます。">
 <meta property="og:url" content="https://katsuan.github.io/gender-reveal/create.html">
 <meta property="og:image" content="https://katsuan.github.io/gender-reveal/ogp.png">
 <meta property="og:image:width" content="1200">
@@ -112,7 +112,7 @@
 <body>
 <main class="wrap">
   <h1>🎁 <span class="grad">発表ページを作る</span></h1>
-  <p class="sub">性別と予定日を入れるだけで、<br>家族に送れる発表ページができます。<br>答えはURLを見てもわかりません。</p>
+  <p class="sub">性別を選ぶだけで、<br>家族に送れる発表ページができます。<br>答えはURLを見てもわかりません。</p>
   <div class="flow" aria-label="作り方"><span>① 入力</span><i>›</i><span>② 作る</span><i>›</i><span>③ LINEで送る</span></div>
 
   <form class="card" id="form" autocomplete="off" novalidate>
@@ -142,9 +142,9 @@
       <div><label>色</label><input name="color" type="color" value="#f5c542"></div>
     </div>
     <div class="field" id="fDue">
-      <label>出産予定日<span class="req">必須</span></label>
+      <label>出産予定日<span class="opt">なくてもOK</span></label>
       <input name="due" type="date">
-      <p class="err-msg">予定日を入れてください</p>
+      <p class="note" style="margin-top:6px">入れると「赤ちゃんに会えるまで あと○日」とカレンダーが出ます。</p>
     </div>
 
     <details class="acc">
@@ -281,7 +281,7 @@
   form.addEventListener("submit", async e => {
     e.preventDefault();
     const fd = new FormData(form);
-    const miss = { fGender: !fd.get("gender"), twinsBox: fd.get("gender") === "twins" && !fd.get("twins"), fDue: !fd.get("due") };
+    const miss = { fGender: !fd.get("gender"), twinsBox: fd.get("gender") === "twins" && !fd.get("twins") };
     Object.entries(miss).forEach(([id, bad]) => $(id).classList.toggle("err", bad));
     const first = Object.keys(miss).find(k => miss[k]);
     if (first) { $(first).scrollIntoView({ behavior: "smooth", block: "center" }); return; }

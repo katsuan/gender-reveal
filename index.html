@@ -174,6 +174,8 @@
   .legend-btn:active { transform: scale(.95); background: #f6f1fb; }
   .legend-btn.current { border-color: var(--ink-soft); color: var(--ink); font-weight: 700; }
   /* 大切な日(文字でも書いておく) */
+  /* カード上部の「あと○日」とカレンダーの区切り */
+  .due-block { padding-bottom: 20px; margin-bottom: 18px; border-bottom: 1px dashed #e3dcef; }
   .key-dates { margin-top: 16px; border-top: 1px dashed #e3dcef; padding-top: 14px; display: flex; flex-direction: column; gap: 6px; font-size: 17px; }
   .key-dates div { display: flex; justify-content: space-between; gap: 8px; }
   .key-dates b { font-weight: 800; white-space: nowrap; }
@@ -371,16 +373,16 @@
     <label class="sound-toggle"><input type="checkbox" id="soundOn" checked> 🔊 音を出す</label>
   </section>
 
-  <section class="card" id="dueCard">
-    <div class="label" id="dueLabel">出産予定日まで</div>
-    <div id="dueCountdown"></div>
-    <div class="progress" id="progress">
-      <div class="progress-meta"><span id="weekText"></span><span>予定日 40週</span></div>
-      <div class="bar"><div class="bar-fill" id="barFill"></div><div class="bar-baby" id="barBaby">🤰</div></div>
+  <!-- 予定日までのカウントとカレンダーは1枚のカードにまとめる -->
+  <section class="card" id="calCard">
+    <div class="due-block" id="dueCard">
+      <div class="label" id="dueLabel">出産予定日まで</div>
+      <div id="dueCountdown"></div>
+      <div class="progress" id="progress">
+        <div class="progress-meta"><span id="weekText"></span><span>予定日 40週</span></div>
+        <div class="bar"><div class="bar-fill" id="barFill"></div><div class="bar-baby" id="barBaby">🤰</div></div>
+      </div>
     </div>
-  </section>
-
-  <section class="card">
     <div class="cal-head">
       <button class="cal-btn" id="calPrev" aria-label="前の月">‹</button>
       <div class="cal-title" id="calTitle"></div>
@@ -719,13 +721,14 @@
   $("calLegend").innerHTML = jumps.map((j, i) =>
     `<span class="legend-item">${i ? '<span class="legend-arrow" aria-hidden="true">›</span>' : ""}` +
     `<button type="button" class="legend-btn" data-i="${i}"><i class="dot ${j.dot}"></i>${j.label}</button></span>`).join("");
+  if (jumps.length < 2) $("calLegend").style.display = "none"; // 「今日」だけならボタン不要
   $("calLegend").onclick = e => { const b = e.target.closest(".legend-btn"); if (b) jumpTo(jumps[b.dataset.i].date); };
   // カレンダーが苦手な人向けに、日付を文字でも並べる(日付順)
-  $("keyDates").innerHTML = [
-    due && { date: due, html: `<span>👶 出産予定日</span><b>${fmtDateW(due)}</b>` },
-    revealAt && { date: revealAt, html: `<span>🎁 発表</span><b>${fmtDateW(revealAt)} ${fmtTime(revealAt)}</b>` },
-  ].filter(Boolean).sort((a, b) => a.date - b.date).map(k => `<div>${k.html}</div>`).join("");
-  if (!due && !revealAt) $("keyDates").style.display = "none";
+  // 出産予定日は同じカードの上部に書いてあるので、ここは発表日だけ
+  $("keyDates").innerHTML = revealAt ? `<div><span>🎁 発表</span><b>${fmtDateW(revealAt)} ${fmtTime(revealAt)}</b></div>` : "";
+  if (!revealAt) $("keyDates").style.display = "none";
+  // 予定日も発表日もなければ、カレンダーに見せるものがないのでカードごと隠す
+  if (!due && !revealAt) $("calCard").style.display = "none";
 
   /* ============ 飾りの絵文字 ============ */
   // 男の子系と女の子系は必ず同じ数だけ使い、どちらかに偏って見えないようにする
