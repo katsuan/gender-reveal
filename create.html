@@ -22,12 +22,13 @@
   :root {
     --boy: #5aa9e6;
     --girl: #f48fb1;
+    --boy-deep: #2f7fc0;
     --girl-deep: #d9557f;
     --gold: #f5c542;
     --bg-top: #fff8f0;
     --bg-bottom: #f3ecff;
     --ink: #3d3450;
-    --ink-soft: #7a7090;
+    --ink-soft: #5f5675; /* 読みやすいよう濃いめ(index と同じ) */
     --line: #e6def0;
     --line-green: #06c755;
     --card: rgba(255, 255, 255, 0.9);
@@ -38,16 +39,22 @@
     --font: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", system-ui, sans-serif;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--font); color: var(--ink); background: linear-gradient(180deg, var(--bg-top), var(--bg-bottom)); background-attachment: fixed; min-height: 100vh; }
+  body { font-family: var(--font); font-size: 17px; line-height: 1.6; color: var(--ink); background: linear-gradient(180deg, var(--bg-top), var(--bg-bottom)); background-attachment: fixed; min-height: 100vh; }
   .wrap { max-width: var(--max-w); margin: 0 auto; padding: 28px 16px 48px; display: flex; flex-direction: column; gap: 16px; }
-  h1 { text-align: center; font-size: 24px; font-weight: 800; background: linear-gradient(90deg, var(--boy), var(--girl)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .sub { text-align: center; font-size: 13px; color: var(--ink-soft); line-height: 1.7; }
+  h1 { text-align: center; font-size: 28px; font-weight: 800; }
+  /* 絵文字までグラデーションで塗られないよう、文字部分だけに掛ける */
+  h1 .grad { background: linear-gradient(90deg, var(--boy-deep), var(--girl-deep)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .sub { text-align: center; font-size: 16px; color: var(--ink-soft); line-height: 1.7; }
+  /* 作り方の流れ */
+  .flow { display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 15px; font-weight: 700; }
+  .flow span { background: #fff; border-radius: 99px; padding: 6px 12px; box-shadow: 0 2px 6px rgba(0,0,0,.06); }
+  .flow i { font-style: normal; color: var(--ink-soft); }
   .card { background: var(--card); border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: 20px; display: flex; flex-direction: column; gap: 14px; }
-  label { font-size: 13px; font-weight: 700; display: block; margin-bottom: 6px; }
-  .opt { font-weight: 400; color: var(--ink-soft); font-size: 11px; margin-left: 4px; }
+  label { font-size: 16px; font-weight: 700; display: block; margin-bottom: 6px; }
+  .opt { font-weight: 400; color: var(--ink-soft); font-size: 13px; white-space: nowrap; margin-left: 4px; }
   input, textarea, select {
-    width: 100%; font-family: inherit; font-size: 16px; padding: 12px; border-radius: var(--radius-md);
-    border: 1px solid var(--line); background: #fff; color: var(--ink);
+    width: 100%; font-family: inherit; font-size: 17px; padding: 12px; border-radius: var(--radius-md);
+    border: 2px solid var(--line); background: #fff; color: var(--ink);
   }
   textarea { min-height: 80px; resize: vertical; }
   /* iOS Safari の日付入力は固有の最小幅を持つためリセットしてはみ出しを防ぐ */
@@ -61,7 +68,7 @@
   .gender label { margin: 0; }
   .gender input { display: none; }
   .gender span {
-    display: block; text-align: center; padding: 14px 6px; border-radius: var(--radius-md); border: 2px solid var(--line);
+    display: block; text-align: center; padding: 16px 6px; font-size: 17px; border-radius: var(--radius-md); border: 2px solid var(--line);
     background: #fff; font-weight: 700; cursor: pointer; transition: .15s;
   }
   .gender input:checked + span { border-color: var(--girl); background: #fff2f7; }
@@ -71,23 +78,23 @@
   .check { display: flex; align-items: center; gap: 8px; font-size: 13px; }
   .check input { width: auto; }
   .btn {
-    border: none; border-radius: 99px; padding: 16px; font-family: inherit; font-size: 16px; font-weight: 800; color: #fff; cursor: pointer;
+    border: none; border-radius: 99px; padding: 18px 16px; font-family: inherit; font-size: 18px; font-weight: 800; color: #fff; cursor: pointer;
     background: linear-gradient(90deg, var(--boy), var(--girl)); box-shadow: 0 8px 20px rgba(200, 120, 180, .3);
   }
   .btn.ghost { background: #fff; color: var(--girl-deep); box-shadow: 0 4px 12px rgba(0,0,0,.08); }
   .out { display: none; }
   .out.show { display: flex; }
-  .url { font-size: 12px; word-break: break-all; background: #fff; border: 1px dashed var(--line); border-radius: var(--radius-md); padding: 12px; color: var(--ink-soft); }
+  .url { font-size: 13px; word-break: break-all; background: #fff; border: 1px dashed var(--line); border-radius: var(--radius-md); padding: 12px; color: var(--ink-soft); }
   .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .note { font-size: 12px; color: var(--ink-soft); line-height: 1.7; }
-  .req { font-size: 10px; font-weight: 700; color: #fff; background: var(--girl-deep); border-radius: 99px; padding: 2px 8px; margin-left: 6px; vertical-align: 1px; }
-  .err-msg { display: none; font-size: 12px; color: var(--girl-deep); margin-top: 6px; font-weight: 700; }
+  .note { font-size: 14px; color: var(--ink-soft); line-height: 1.7; }
+  .req { font-size: 12px; font-weight: 700; color: #fff; background: var(--girl-deep); border-radius: 99px; padding: 2px 8px; margin-left: 6px; vertical-align: 1px; }
+  .err-msg { display: none; font-size: 15px; color: var(--girl-deep); margin-top: 6px; font-weight: 700; }
   .field.err .err-msg { display: block; }
   .field.err input[type=date] { border-color: var(--girl-deep); background: #fff5f8; }
   .field.err .gender span { border-color: #f2b3c7; }
   .acc { border: 1px solid var(--line); border-radius: var(--radius-md); background: #fff; }
   .acc summary {
-    list-style: none; cursor: pointer; padding: 14px; font-size: 14px; font-weight: 700;
+    list-style: none; cursor: pointer; padding: 16px 14px; font-size: 16px; font-weight: 700;
     display: flex; align-items: center; gap: 6px;
   }
   .acc summary::-webkit-details-marker { display: none; }
@@ -104,8 +111,9 @@
 </head>
 <body>
 <main class="wrap">
-  <h1>🎁 発表ページを作る</h1>
-  <p class="sub">入力するとシェア用URLができます。<br>性別は暗号化され、URLからは見えません。</p>
+  <h1>🎁 <span class="grad">発表ページを作る</span></h1>
+  <p class="sub">性別と予定日を入れるだけで、<br>家族に送れる発表ページができます。<br>答えはURLを見てもわかりません。</p>
+  <div class="flow" aria-label="作り方"><span>① 入力</span><i>›</i><span>② 作る</span><i>›</i><span>③ LINEで送る</span></div>
 
   <form class="card" id="form" autocomplete="off" novalidate>
     <div class="field" id="fGender">
@@ -114,7 +122,7 @@
         <label><input type="radio" name="gender" value="boy"><span>👦 男の子</span></label>
         <label><input type="radio" name="gender" value="girl"><span>👧 女の子</span></label>
         <label><input type="radio" name="gender" value="twins"><span>👶👶 双子</span></label>
-        <label><input type="radio" name="gender" value="custom"><span>✏️ カスタム</span></label>
+        <label><input type="radio" name="gender" value="custom"><span>✏️ 自由に書く</span></label>
       </div>
       <p class="err-msg">性別を選んでください</p>
     </div>
@@ -129,9 +137,9 @@
       <p class="err-msg">ふたりの性別を選んでください</p>
     </div>
     <div id="customBox" class="row">
-      <div><label>表示テキスト</label><input name="label" placeholder="男の子と女の子！"></div>
+      <div><label>発表する言葉</label><input name="label" placeholder="男の子と女の子！"></div>
       <div><label>絵文字</label><input name="emoji" placeholder="👦👧"></div>
-      <div><label>テーマ色</label><input name="color" type="color" value="#f5c542"></div>
+      <div><label>色</label><input name="color" type="color" value="#f5c542"></div>
     </div>
     <div class="field" id="fDue">
       <label>出産予定日<span class="req">必須</span></label>
@@ -140,43 +148,43 @@
     </div>
 
     <details class="acc">
-      <summary><span>🔒 合言葉・発表の設定</span><span class="opt">任意</span></summary>
+      <summary><span>🔒 合言葉・発表日時</span><span class="opt">なくてもOK</span></summary>
       <div class="acc-body">
-        <div><label>合言葉<span class="opt">おすすめ</span></label><input name="pass" placeholder="例: ひよこ"><p class="note" style="margin-top:6px">設定すると、合言葉を知らない人はURLを解析しても性別がわかりません。当日口頭やLINEで伝えてね。</p></div>
-        <div><label>発表解禁日時</label><input name="reveal" type="datetime-local"><p class="note" style="margin-top:6px">この日時まで発表ボタンがロックされます。</p></div>
-        <div><label>プレゼントを開けるタップ回数</label><select name="taps"><option value="1">1回</option><option value="3">3回</option><option value="5" selected>5回（標準）</option><option value="7">7回</option><option value="10">10回</option><option value="15">15回</option><option value="20">20回</option></select><p class="note" style="margin-top:6px">多いほどじらせます。</p></div>
+        <div><label>合言葉<span class="opt">おすすめ</span></label><input name="pass" placeholder="例: ひよこ"><p class="note" style="margin-top:6px">合言葉を知っている人だけが答えを見られます。合言葉はURLとは別に、LINEや電話で伝えてね。</p></div>
+        <div><label>発表してよい日時</label><input name="reveal" type="datetime-local"><p class="note" style="margin-top:6px">この日時になるまで、発表ボタンは押せません。みんなで同時に見たいときに。</p></div>
+        <div><label>プレゼントを開けるまでのタップ回数</label><select name="taps"><option value="1">1回</option><option value="3">3回</option><option value="5" selected>5回（標準）</option><option value="7">7回</option><option value="10">10回</option><option value="15">15回</option><option value="20">20回</option></select><p class="note" style="margin-top:6px">多いほどドキドキが長くなります。おじいちゃん・おばあちゃんには3〜5回がおすすめ。</p></div>
       </div>
     </details>
 
     <details class="acc">
-      <summary><span>✨ 名前・メッセージ</span><span class="opt">任意</span></summary>
+      <summary><span>✨ 名前・メッセージ</span><span class="opt">なくてもOK</span></summary>
       <div class="acc-body">
         <div class="row">
           <div><label>パパ</label><input name="dad" placeholder="太郎"></div>
           <div><label>ママ</label><input name="mom" placeholder="花子"></div>
         </div>
         <div><label>赤ちゃんの名前・愛称</label><input name="name" placeholder="べびちゃん"></div>
-        <div><label>タイトル</label><input name="title" placeholder="ベビーの性別発表"></div>
+        <div><label>ページのタイトル</label><input name="title" placeholder="ベビーの性別発表"></div>
         <div><label>発表後のメッセージ</label><textarea name="msg" placeholder="元気に生まれてきてね！"></textarea></div>
       </div>
     </details>
 
-    <button class="btn" type="submit">URLを作成</button>
+    <button class="btn" type="submit">🎁 発表ページを作る</button>
   </form>
 
   <section class="card out" id="out">
-    <label>シェア用URL</label>
+    <label>🎉 できました！ 発表ページのURL</label>
     <div class="url" id="url"></div>
     <div class="btns">
-      <button class="btn ghost" id="copy" type="button">コピー</button>
+      <button class="btn ghost" id="copy" type="button">URLをコピー</button>
       <a class="btn" id="open" target="_blank" rel="noopener" style="text-align:center;text-decoration:none">開いてみる</a>
     </div>
-    <p class="note">⚠️ 「開いてみる」を押すと自分にネタバレします。プレビューは解禁日時を未来にして確認するのがおすすめ。</p>
+    <p class="note">⚠️ 「開いてみる」で発表まで進むと、答えが見えてしまいます。見た目だけ確かめたいときは、発表してよい日時を先の日付にしてから開くのがおすすめです。</p>
     <div class="line-share">
-      <label>LINEで送る</label>
-      <a class="btn line" id="lineFlex" target="_blank" rel="noopener">💌 カードで送る(FlexSender)</a>
-      <a class="btn line ghost-line" id="lineText" target="_blank" rel="noopener">💬 テキストで送る</a>
-      <p class="note" id="lenWarn" style="display:none;color:var(--girl-deep)">URLが長すぎてLINEのボタンに入らない可能性があります。メッセージを短くしてください。</p>
+      <label>③ LINEで家族に送る</label>
+      <a class="btn line" id="lineFlex" target="_blank" rel="noopener">💌 カードで送る（おすすめ）</a>
+      <a class="btn line ghost-line" id="lineText" target="_blank" rel="noopener">💬 文字だけで送る</a>
+      <p class="note" id="lenWarn" style="display:none;color:var(--girl-deep)">URLが長すぎて、LINEのカードのボタンに入らないかもしれません。メッセージを短くしてください。</p>
     </div>
   </section>
 </main>
@@ -297,7 +305,7 @@
 
   $("copy").onclick = async () => {
     try { await navigator.clipboard.writeText($("url").textContent); $("copy").textContent = "コピーしました！"; }
-    catch { prompt("コピーしてください", $("url").textContent); }
+    catch { prompt("長押ししてコピーしてください", $("url").textContent); }
   };
 })();
 </script>
