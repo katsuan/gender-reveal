@@ -32,7 +32,7 @@
     --bg-top: #fff8f0;
     --bg-bottom: #f3ecff;
     --ink: #3d3450;
-    --ink-soft: #7a7090;
+    --ink-soft: #5f5675; /* 年配の方でも読めるよう濃いめ */
     --card: rgba(255, 255, 255, 0.82);
     --card-border: rgba(255, 255, 255, 0.95);
     --shadow: 0 10px 30px rgba(90, 70, 130, 0.14);
@@ -50,6 +50,8 @@
   html, body { height: 100%; }
   body {
     font-family: var(--font);
+    font-size: 17px;
+    line-height: 1.6;
     color: var(--ink);
     background: linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
     background-attachment: fixed;
@@ -80,35 +82,52 @@
 
   /* ===== ヘッダー ===== */
   .hero { text-align: center; padding-top: 8px; }
-  .hero .eyebrow {
-    font-size: 12px; letter-spacing: .25em; color: var(--ink-soft); text-transform: uppercase;
-  }
+  .hero .eyebrow { font-size: 16px; font-weight: 700; color: var(--ink-soft); }
   .hero h1 {
-    font-size: 30px; font-weight: 800; margin: 6px 0 4px; line-height: 1.3;
-    background: linear-gradient(90deg, var(--boy), var(--girl));
+    font-size: 32px; font-weight: 800; margin: 4px 0; line-height: 1.3;
+    background: linear-gradient(90deg, var(--boy-deep), var(--girl-deep));
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  .hero .names { font-size: 15px; color: var(--ink-soft); }
+  .hero .names { font-size: 18px; color: var(--ink); font-weight: 700; }
   .question {
-    display: inline-flex; gap: 10px; margin-top: 14px; align-items: center; font-weight: 800; font-size: 20px;
+    display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; margin-top: 12px; align-items: center; font-weight: 800; font-size: 24px;
   }
-  .question .b { color: var(--boy); } .question .g { color: var(--girl); }
-  .question .or { font-size: 13px; color: var(--ink-soft); font-weight: 400; }
+  .question .b { color: var(--boy-deep); } .question .g { color: var(--girl-deep); }
+  .question .b, .question .g { white-space: nowrap; }
+  .question .or { font-size: 16px; color: var(--ink-soft); font-weight: 700; margin-left: 2px; }
 
   /* ===== カウントダウン ===== */
-  .label { font-size: 13px; color: var(--ink-soft); text-align: center; margin-bottom: 12px; }
+  .label { font-size: 18px; font-weight: 700; color: var(--ink); text-align: center; margin-bottom: 12px; }
   .countdown { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
   .cd-cell {
     background: #fff; border-radius: var(--radius-md); padding: 12px 4px; text-align: center;
     box-shadow: inset 0 0 0 1px rgba(0,0,0,.04);
   }
-  .cd-num { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; }
-  .cd-unit { font-size: 11px; color: var(--ink-soft); margin-top: 2px; }
-  .cd-done { text-align: center; font-size: 18px; font-weight: 700; }
+  .cd-num { font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .cd-unit { font-size: 15px; color: var(--ink-soft); margin-top: 4px; }
+  .cd-done { text-align: center; font-size: 20px; font-weight: 700; }
+  /* 予定日までは「あと○日」だけを大きく */
+  .days-left { text-align: center; font-size: 22px; font-weight: 700; }
+  .due-sub { text-align: center; font-size: 16px; color: var(--ink-soft); margin-top: 2px; }
+  .nowrap { white-space: nowrap; }
+  .days-left b {
+    font-size: 60px; font-weight: 800; margin: 0 6px; font-variant-numeric: tabular-nums; line-height: 1.1;
+    background: linear-gradient(90deg, var(--boy-deep), var(--girl-deep)); /* タイトルと同じ青→ピンク */
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+
+  /* 使い方 */
+  .steps { list-style: none; margin: 4px 0 18px; display: flex; flex-direction: column; gap: 8px; }
+  .steps li { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 700; background: #fff; border-radius: var(--radius-md); padding: 10px 12px; }
+  .steps .n {
+    flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+    background: linear-gradient(135deg, var(--boy), var(--girl)); color: #fff; font-size: 16px;
+  }
 
   /* 妊娠週数プログレス */
-  .progress { margin-top: 16px; }
-  .progress-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-soft); margin-bottom: 6px; }
+  .progress { margin-top: 18px; }
+  .progress-meta { display: flex; justify-content: space-between; align-items: baseline; font-size: 15px; color: var(--ink-soft); margin-bottom: 8px; }
+  .progress-meta #weekText { font-size: 17px; font-weight: 700; color: var(--ink); }
   .bar { height: 12px; border-radius: 99px; background: #eee6f5; overflow: hidden; position: relative; }
   .bar-fill {
     height: 100%; width: 0; border-radius: 99px;
@@ -122,58 +141,68 @@
 
   /* ===== カレンダー ===== */
   .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-  .cal-title { font-weight: 800; font-size: 17px; }
+  .cal-title { font-weight: 800; font-size: 20px; }
   .cal-btn {
-    width: 34px; height: 34px; border-radius: 50%; border: none; background: #fff; color: var(--ink);
-    font-size: 16px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.08);
+    width: 44px; height: 44px; border-radius: 50%; border: none; background: #fff; color: var(--ink);
+    font-size: 22px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.12);
   }
   .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
-  .cal-dow { font-size: 11px; color: var(--ink-soft); padding: 4px 0; }
+  .cal-dow { font-size: 14px; font-weight: 700; color: var(--ink-soft); padding: 4px 0; }
   .cal-dow:first-child { color: var(--girl-deep); } .cal-dow:last-child { color: var(--boy-deep); }
   .cal-day {
-    aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 14px;
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 17px;
     border-radius: var(--radius-sm); position: relative; font-variant-numeric: tabular-nums;
   }
-  .cal-day.muted { color: #cfc8da; }
-  .cal-day.past { color: #b8b0c6; }
+  .cal-day.muted { color: #d6d0e0; }
+  .cal-day.past { color: #a49cb4; }
   .cal-day.today { box-shadow: inset 0 0 0 2px var(--ink-soft); font-weight: 700; }
   .cal-day.reveal-day { background: color-mix(in srgb, var(--gold) 35%, #fff); font-weight: 700; }
   .cal-day.due {
     background: linear-gradient(135deg, var(--boy), var(--girl)); color: #fff; font-weight: 800;
     animation: pulse 1.8s ease-in-out infinite;
   }
+  /* 予定日まで「あと○日」の節目 */
   .cal-day.due::after { content: "👶"; position: absolute; top: -8px; right: -4px; font-size: 13px; }
-  .cal-legend { display: flex; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+  .cal-legend { display: flex; gap: 6px 4px; justify-content: center; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+  .legend-item { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .legend-arrow { color: var(--ink-soft); font-size: 18px; font-weight: 700; }
   .legend-btn {
-    font-family: inherit; font-size: 12px; color: var(--ink-soft); cursor: pointer;
-    background: #fff; border: 1px solid #ebe4f3; border-radius: 99px; padding: 6px 12px;
+    font-family: inherit; font-size: 15px; color: var(--ink-soft); cursor: pointer;
+    background: #fff; border: 1px solid #ebe4f3; border-radius: 99px; padding: 8px 10px;
     display: inline-flex; align-items: center; transition: background .15s, transform .1s;
   }
   .legend-btn:active { transform: scale(.95); background: #f6f1fb; }
   .legend-btn.current { border-color: var(--ink-soft); color: var(--ink); font-weight: 700; }
+  /* 大切な日(文字でも書いておく) */
+  .key-dates { margin-top: 16px; border-top: 1px dashed #e3dcef; padding-top: 14px; display: flex; flex-direction: column; gap: 6px; font-size: 17px; }
+  .key-dates div { display: flex; justify-content: space-between; gap: 8px; }
+  .key-dates b { font-weight: 800; white-space: nowrap; }
   .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
   .dot.due { background: linear-gradient(135deg, var(--boy), var(--girl)); }
   .dot.today { box-shadow: inset 0 0 0 2px var(--ink-soft); }
   .dot.rv { background: color-mix(in srgb, var(--gold) 50%, #fff); }
+  .dot.ms { background: #e6dcf5; box-shadow: inset 0 -3px 0 var(--girl-deep); }
 
   @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 
   /* ===== 発表ボタン ===== */
   .reveal-card { border: 2px solid color-mix(in srgb, var(--girl) 35%, var(--boy)); }
   .cta {
-    width: 100%; border: none; border-radius: 99px; padding: 18px; font-family: inherit;
-    font-size: 18px; font-weight: 800; color: #fff; cursor: pointer;
+    width: 100%; border: none; border-radius: 99px; padding: 22px 18px; font-family: inherit;
+    font-size: 22px; font-weight: 800; color: #fff; cursor: pointer;
     background: linear-gradient(90deg, var(--boy), var(--girl));
     box-shadow: 0 8px 20px rgba(200, 120, 180, .35);
     animation: glow 2.4s ease-in-out infinite;
   }
-  .cta:disabled { background: #cfc8da; box-shadow: none; animation: none; cursor: not-allowed; }
+  .cta:disabled { background: #b9b1c7; box-shadow: none; animation: none; cursor: not-allowed; }
   @keyframes glow { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-  .lock-note { text-align: center; font-size: 13px; color: var(--ink-soft); margin-top: 10px; }
+  .lock-note { text-align: center; font-size: 16px; line-height: 1.7; color: var(--ink); margin-top: 12px; }
+  .lock-note:empty { display: none; }
   .sound-toggle {
-    display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px;
-    color: var(--ink-soft); margin-top: 10px; cursor: pointer; user-select: none;
+    display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 16px;
+    color: var(--ink-soft); margin-top: 14px; cursor: pointer; user-select: none;
   }
+  .sound-toggle input { width: 22px; height: 22px; accent-color: var(--girl-deep); }
 
   /* ===== 演出ステージ(全画面) ===== */
   .stage {
@@ -184,10 +213,17 @@
   .stage.show { display: flex; }
   .stage.dark { background: radial-gradient(circle at 50% 45%, #2a2340 0%, #0f0b1a 75%); color: #fff; transition: background .6s; }
 
-  .hint { font-size: 16px; color: var(--ink-soft); margin-top: 26px; min-height: 1.5em; font-weight: 700; }
-  .stage.dark .hint { color: #cfc6e8; }
-  .taps { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
-  .tap-dot { width: 10px; height: 10px; border-radius: 50%; background: #e3dcef; transition: background .2s, transform .2s; }
+  .hint { font-size: 22px; color: var(--ink); margin-top: 26px; min-height: 1.5em; font-weight: 800; }
+  .stage.dark .hint { color: #e4ddf5; }
+  /* 演出をやめて戻るボタン(困ったとき用) */
+  .stage-close {
+    position: absolute; top: max(14px, env(safe-area-inset-top)); left: 14px;
+    font-family: inherit; font-size: 16px; font-weight: 700; color: var(--ink);
+    background: #fff; border: none; border-radius: 99px; padding: 10px 16px; box-shadow: 0 2px 8px rgba(0,0,0,.12); cursor: pointer;
+  }
+  .stage.dark .stage-close, .stage.done .stage-close { display: none; }
+  .taps { display: flex; gap: 10px; justify-content: center; margin-top: 14px; }
+  .tap-dot { width: 14px; height: 14px; border-radius: 50%; background: #e3dcef; transition: background .2s, transform .2s; }
   .tap-dot.on { background: linear-gradient(135deg, var(--boy), var(--girl)); transform: scale(1.3); }
 
   /* ギフトボックス(🎁絵文字) */
@@ -218,12 +254,24 @@
   .gift:not(.idle) .finger { opacity: 0; }
   /* タップ時のキラキラ */
   .spark { position: absolute; z-index: 3; pointer-events: none; font-size: 22px; animation: spark .7s ease-out forwards; }
+  /* タップで箱の後ろから飛び出す絵文字(z-index 0 = 🎁の後ろ) */
+  .pop {
+    position: absolute; left: 50%; top: 50%; z-index: 0; pointer-events: none; line-height: 1;
+    opacity: 0; animation: pop 1.4s cubic-bezier(.2,.7,.3,1) forwards;
+  }
+  /* 素早く箱の外へ出て、外側でゆっくり落ちながら消える */
+  @keyframes pop {
+    0%   { transform: translate(-50%, -50%) scale(.3) rotate(0); opacity: 0; }
+    10%  { opacity: .9; }
+    35%  { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1) rotate(var(--rot)); opacity: .9; }
+    100% { transform: translate(calc(-50% + var(--dx) * 1.1), calc(-50% + var(--dy) + 40px)) scale(.9) rotate(var(--rot)); opacity: 0; }
+  }
   .gift.shake-1 { animation: shake .35s; }
   .gift.shake-2 { animation: shake .3s 2; }
   .gift.shake-3 { animation: shakeBig .25s 3; }
   .gift.open .gift-emoji { transform: scale(2.2); opacity: 0; transition: transform .6s ease-in, opacity .6s ease-in; }
-  .remain { font-size: 13px; color: var(--ink-soft); margin-top: 6px; min-height: 1.4em; }
-  .remain b { color: var(--girl-deep); font-size: 16px; }
+  .remain { font-size: 18px; font-weight: 700; color: var(--ink-soft); margin-top: 8px; min-height: 1.4em; }
+  .remain b { color: var(--girl-deep); font-size: 28px; margin: 0 2px; }
 
   @keyframes invite { 0%,100% { transform: scale(1) rotate(0); } 10% { transform: scale(1.05) rotate(-4deg); } 20% { transform: scale(1.05) rotate(4deg); } 30% { transform: scale(1) rotate(0); } }
   @keyframes ring { 0% { transform: scale(.7); opacity: .7; } 100% { transform: scale(1.25); opacity: 0; } }
@@ -244,7 +292,7 @@
   /* 結果 */
   .result { display: none; flex-direction: column; align-items: center; gap: 12px; }
   .result.show { display: flex; }
-  .result .it { font-size: 18px; color: var(--ink-soft); letter-spacing: .15em; animation: fadeUp .8s both; }
+  .result .it { font-size: 22px; font-weight: 700; color: var(--ink); letter-spacing: .08em; animation: fadeUp .8s both; }
   .result .answer {
     font-size: 64px; font-weight: 800; color: var(--reveal-deep); line-height: 1.15;
     animation: zoomIn 1s cubic-bezier(.2,1.6,.4,1) both .2s;
@@ -253,24 +301,26 @@
   .result .answer.long { font-size: 40px; }
   .result .emoji.many { font-size: 52px; white-space: nowrap; }
   .result .emoji { font-size: 72px; animation: zoomIn 1s cubic-bezier(.2,1.6,.4,1) both .5s; }
-  .result .baby-name { font-size: 20px; font-weight: 700; color: var(--reveal-deep); animation: fadeUp .8s both .9s; }
-  .result .msg { font-size: 15px; line-height: 1.8; color: var(--ink); max-width: 340px; white-space: pre-wrap; animation: fadeUp .8s both 1.2s; }
-  .result .actions { display: flex; gap: 10px; margin-top: 12px; animation: fadeUp .8s both 1.6s; }
+  .result .baby-name { font-size: 24px; font-weight: 800; color: var(--reveal-deep); animation: fadeUp .8s both .9s; }
+  .result .msg { font-size: 18px; line-height: 1.8; color: var(--ink); max-width: 340px; white-space: pre-wrap; animation: fadeUp .8s both 1.2s; }
+  .result .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 12px; animation: lateIn 1.2s ease both 4.4s; }
   .pill {
-    border: none; border-radius: 99px; padding: 12px 20px; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+    border: none; border-radius: 99px; padding: 14px 22px; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
     background: #fff; color: var(--reveal-deep); box-shadow: 0 4px 12px rgba(0,0,0,.1);
   }
   .pill.primary { background: var(--reveal); color: #fff; }
-  .share-box { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 14px; animation: fadeUp .8s both 1.5s; }
-  .pill.line-btn { background: var(--line-green); color: #fff; text-decoration: none; font-size: 16px; padding: 14px 32px; box-shadow: 0 6px 16px rgba(6, 199, 85, .3); }
-  .text-link { font-size: 12px; color: var(--ink-soft); }
-  .share-note { font-size: 11px; color: var(--ink-soft); text-align: center; line-height: 1.6; }
+  .share-box { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 14px; animation: lateIn 1.2s ease both 4s; }
+  .pill.line-btn { background: var(--line-green); color: #fff; text-decoration: none; font-size: 18px; padding: 16px 32px; box-shadow: 0 6px 16px rgba(6, 199, 85, .3); }
+  .text-link { font-size: 15px; color: var(--ink-soft); }
+  .share-note { font-size: 14px; color: var(--ink-soft); text-align: center; line-height: 1.6; }
   @keyframes zoomIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
   @keyframes fadeUp { 0% { transform: translateY(16px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+  /* 発表後のボタン類: 結果をスクショできるよう少し待ってからふわっと出す。出るまでは押せない */
+  @keyframes lateIn { 0% { transform: translateY(10px); opacity: 0; visibility: hidden; } 1% { visibility: visible; } 100% { transform: translateY(0); opacity: 1; visibility: visible; } }
 
   /* 背景の浮遊バルーン */
   .floaters { position: fixed; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
-  .floater { position: absolute; bottom: -80px; font-size: 32px; opacity: .55; animation: floatUp linear infinite; }
+  .floater { position: absolute; bottom: -80px; font-size: 32px; opacity: .4; animation: floatUp linear infinite; }
   @keyframes floatUp { 0% { transform: translateY(0) rotate(0); } 100% { transform: translateY(-120vh) rotate(25deg); } }
 
   canvas#confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
@@ -280,20 +330,20 @@
   .modal.show { display: flex; }
   .modal-box { width: 100%; max-width: 360px; background: #fff; border-radius: var(--radius-lg); padding: 24px 20px; text-align: center; box-shadow: var(--shadow); }
   .modal-box.shake-1 { animation: shake .35s 2; }
-  .modal-box h2 { font-size: 18px; margin-bottom: 6px; }
-  .modal-box p { font-size: 13px; color: var(--ink-soft); margin-bottom: 14px; }
-  .modal-box input { width: 100%; font-family: inherit; font-size: 18px; text-align: center; padding: 12px; border-radius: var(--radius-md); border: 2px solid #e6def0; margin-bottom: 8px; }
+  .modal-box h2 { font-size: 22px; margin-bottom: 8px; }
+  .modal-box p { font-size: 16px; line-height: 1.7; color: var(--ink); margin-bottom: 14px; }
+  .modal-box input { width: 100%; font-family: inherit; font-size: 22px; text-align: center; padding: 12px; border-radius: var(--radius-md); border: 2px solid #e6def0; margin-bottom: 8px; }
   .modal-box input:focus { outline: none; border-color: var(--girl); }
-  .pass-err { font-size: 13px; color: var(--girl-deep); min-height: 1.4em; margin-bottom: 8px; }
+  .pass-err { font-size: 16px; font-weight: 700; color: var(--girl-deep); min-height: 1.4em; margin-bottom: 8px; }
   .modal-actions { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; }
   .modal-actions .pill { color: var(--ink-soft); }
   .modal-actions .pill.primary { background: linear-gradient(90deg, var(--boy), var(--girl)); color: #fff; }
 
   /* エラー / 未設定 */
-  .empty { text-align: center; line-height: 1.8; font-size: 14px; }
+  .empty { text-align: center; line-height: 1.8; font-size: 16px; }
   .empty a { color: var(--girl-deep); font-weight: 700; }
 
-  .footer { text-align: center; font-size: 12px; color: var(--ink-soft); }
+  .footer { text-align: center; font-size: 13px; color: var(--ink-soft); margin-top: 12px; }
   .footer a { color: inherit; }
 
   @media (prefers-reduced-motion: reduce) {
@@ -307,25 +357,26 @@
 
 <main class="wrap" id="main">
   <section class="hero">
-    <div class="eyebrow">Gender Reveal</div>
+    <div class="eyebrow">うれしいご報告です</div>
     <h1 id="title">ベビーの性別発表</h1>
     <div class="names" id="names"></div>
-    <div class="question"><span class="b">👦 男の子</span><span class="or">or</span><span class="g">女の子 👧</span></div>
+    <div class="question"><span class="b">👦 男の子<span class="or">かな？</span></span><span class="g">女の子<span class="or">かな？</span> 👧</span></div>
   </section>
 
   <section class="card reveal-card">
-    <div class="label" id="revealLabel">👇 ボタンを押して発表を見てね</div>
+    <div class="label" id="revealLabel">発表の見かた</div>
     <div id="revealCountdown"></div>
-    <button class="cta" id="startBtn">🎁 性別を発表する</button>
+    <ol class="steps" id="steps"></ol>
+    <button class="cta" id="startBtn">🎁 押して発表を見る</button>
     <div class="lock-note" id="lockNote"></div>
-    <label class="sound-toggle"><input type="checkbox" id="soundOn" checked> 🔊 効果音あり</label>
+    <label class="sound-toggle"><input type="checkbox" id="soundOn" checked> 🔊 音を出す</label>
   </section>
 
   <section class="card" id="dueCard">
     <div class="label" id="dueLabel">出産予定日まで</div>
     <div id="dueCountdown"></div>
     <div class="progress" id="progress">
-      <div class="progress-meta"><span id="weekText"></span><span>40週</span></div>
+      <div class="progress-meta"><span id="weekText"></span><span>予定日 40週</span></div>
       <div class="bar"><div class="bar-fill" id="barFill"></div><div class="bar-baby" id="barBaby">🤰</div></div>
     </div>
   </section>
@@ -337,19 +388,18 @@
       <button class="cal-btn" id="calNext" aria-label="次の月">›</button>
     </div>
     <div class="cal-grid" id="calGrid"></div>
-    <div class="cal-legend">
-      <button type="button" class="legend-btn" id="legendDue"><i class="dot due"></i>予定日</button>
-      <button type="button" class="legend-btn" id="legendToday"><i class="dot today"></i>今日</button>
-      <button type="button" class="legend-btn" id="legendReveal"><i class="dot rv"></i>発表日</button>
+    <div class="cal-legend" id="calLegend">
     </div>
+    <div class="key-dates" id="keyDates"></div>
   </section>
 
 
-  <div class="footer"><a href="create.html">自分用の発表ページを作る</a></div>
+  <div class="footer"><a href="create.html">（パパ・ママ向け）発表ページを作る</a></div>
 </main>
 
 <!-- 演出ステージ -->
 <div class="stage" id="stage" aria-live="polite">
+  <button type="button" class="stage-close" id="stageClose">← もどる</button>
   <div class="gift idle" id="gift" role="button" aria-label="プレゼントをタップ">
     <span class="gift-emoji">🎁</span>
     <span class="finger">👆</span>
@@ -359,32 +409,33 @@
   <div class="heart" id="heart">💓</div>
   <div class="taps" id="taps"></div>
   <div class="result" id="result">
-    <div class="it" id="lead">IT'S A…</div>
+    <div class="it" id="lead">生まれてくるのは…</div>
     <div class="answer" id="answer"></div>
     <div class="emoji" id="answerEmoji"></div>
     <div class="baby-name" id="babyName"></div>
     <div class="msg" id="msg"></div>
     <div class="share-box">
-      <a class="pill line-btn" id="lineFlexBtn" target="_blank" rel="noopener">💌 LINEでカードを送る</a>
-      <p class="share-note">性別は書かずに発表ページのカードを送ります。<br>みんなにもドキドキしてもらおう🎁</p>
-      <a class="text-link" id="lineShareBtn" target="_blank" rel="noopener">テキストで送る</a>
+      <a class="pill line-btn" id="lineFlexBtn" target="_blank" rel="noopener">💌 LINEで家族にも送る</a>
+      <p class="share-note">答えは書かずに、このページを送ります。<br>送った人も自分でプレゼントを開けられます🎁</p>
+      <a class="text-link" id="lineShareBtn" target="_blank" rel="noopener">文字だけで送る</a>
     </div>
     <div class="actions">
-      <button class="pill" id="replayBtn">トップに戻る</button>
-      <button class="pill" id="shareBtn">その他で共有</button>
+      <button class="pill" id="againBtn">🔁 もう一度見る</button>
+      <button class="pill" id="replayBtn">最初の画面へ</button>
+      <button class="pill" id="shareBtn">リンクをコピー</button>
     </div>
   </div>
 </div>
 
 <div class="modal" id="passModal">
   <form class="modal-box" id="passBox">
-    <h2>🔑 合言葉を入力</h2>
-    <p>パパ・ママから聞いた合言葉を入れてね</p>
-    <input id="passInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <h2>🔑 合言葉を入れてください</h2>
+    <p>パパ・ママから教えてもらった<br>合言葉を、下の白い枠に入れてね。<br>わからないときはパパ・ママに聞いてみてね。</p>
+    <input id="passInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="ここに入力" aria-label="合言葉">
     <div class="pass-err" id="passErr"></div>
     <div class="modal-actions">
-      <button type="button" class="pill" id="passCancel">戻る</button>
-      <button type="submit" class="pill primary">発表へ</button>
+      <button type="button" class="pill" id="passCancel">やめる</button>
+      <button type="submit" class="pill primary">発表を見る</button>
     </div>
   </form>
 </div>
@@ -400,13 +451,13 @@
   const PREGNANCY_DAYS = 280;
   // lead: 発表直前の一言 / label: 発表テキスト
   const GENDERS = {
-    boy:            { lead: "IT'S A…",     label: "男の子",         emoji: "👦💙",   color: "--boy",  deep: "--boy-deep" },
-    girl:           { lead: "IT'S A…",     label: "女の子",         emoji: "👧🩷",   color: "--girl", deep: "--girl-deep" },
-    "twins-boys":   { lead: "IT'S TWINS…", label: "男の子ふたり！", emoji: "👦👦💙", color: "--boy",  deep: "--boy-deep" },
-    "twins-girls":  { lead: "IT'S TWINS…", label: "女の子ふたり！", emoji: "👧👧🩷", color: "--girl", deep: "--girl-deep" },
-    "twins-mixed":  { lead: "IT'S TWINS…", label: "男の子と女の子！", emoji: "👦💙👧🩷", color: "--gold", deep: "--gold-deep" },
-    twins:          { lead: "なんと…",     label: "双子ちゃん！",   emoji: "👶👶",   color: "--gold", deep: "--gold-deep" },
-    surprise:       { lead: "IT'S…",       label: "ヒミツ！",       emoji: "🤫✨",   color: "--gold", deep: "--gold-deep" },
+    boy:            { lead: "生まれてくるのは…",   label: "男の子",         emoji: "👦💙",   color: "--boy",  deep: "--boy-deep" },
+    girl:           { lead: "生まれてくるのは…",   label: "女の子",         emoji: "👧🩷",   color: "--girl", deep: "--girl-deep" },
+    "twins-boys":   { lead: "なんと双子ちゃん！", label: "男の子ふたり！", emoji: "👦👦💙", color: "--boy",  deep: "--boy-deep" },
+    "twins-girls":  { lead: "なんと双子ちゃん！", label: "女の子ふたり！", emoji: "👧👧🩷", color: "--girl", deep: "--girl-deep" },
+    "twins-mixed":  { lead: "なんと双子ちゃん！", label: "男の子と女の子！", emoji: "👦💙👧🩷", color: "--gold", deep: "--gold-deep" },
+    twins:          { lead: "なんと…",           label: "双子ちゃん！",   emoji: "👶👶",   color: "--gold", deep: "--gold-deep" },
+    surprise:       { lead: "それは…",           label: "ヒミツ！",       emoji: "🤫✨",   color: "--gold", deep: "--gold-deep" },
   };
   const ALIASES = { m: "boy", male: "boy", 男: "boy", 男の子: "boy", f: "girl", female: "girl", 女: "girl", 女の子: "girl" };
 
@@ -513,6 +564,10 @@
   const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
   const pad = n => String(n).padStart(2, "0");
   const fmtDate = d => `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+  // 画面表示用: 曜日つき「10月10日(土)」、時刻は「19時」「19時30分」
+  const fmtDateW = d => `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日(${"日月火水木金土"[d.getDay()]})`;
+  const fmtTime = d => `${d.getHours()}時${d.getMinutes() ? d.getMinutes() + "分" : ""}`;
+  const startOfDay = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -550,8 +605,9 @@
     const start = new Date(due.getTime() - PREGNANCY_DAYS * 864e5);
     const elapsed = Math.floor((Date.now() - start) / 864e5);
     const ratio = Math.min(1, Math.max(0, elapsed / PREGNANCY_DAYS));
-    const w = Math.floor(elapsed / 7), dd = elapsed % 7;
-    $("weekText").textContent = elapsed < 0 ? "" : (elapsed >= PREGNANCY_DAYS ? "予定日を迎えました 🎉" : `いま 妊娠${w}週${dd}日`);
+    const w = Math.floor(elapsed / 7);
+    const month = Math.min(10, Math.floor(w / 4) + 1); // 妊娠○か月(4週=1か月の数え方)
+    $("weekText").textContent = elapsed < 0 ? "" : (elapsed >= PREGNANCY_DAYS ? "予定日を迎えました 🎉" : `いま 妊娠${month}か月(${w}週)`);
     requestAnimationFrame(() => {
       $("barFill").style.width = (ratio * 100) + "%";
       $("barBaby").style.left = Math.min(96, Math.max(4, ratio * 100)) + "%";
@@ -560,8 +616,11 @@
 
   function tick() {
     if (due) {
-      $("dueLabel").textContent = `出産予定日 ${fmtDate(due)} まで`;
-      renderCountdown($("dueCountdown"), due, "予定日を迎えました 👶🎉");
+      // 予定日までは秒まで動かさず「あと○日」だけ
+      const days = Math.round((startOfDay(due) - startOfDay(new Date())) / 864e5);
+      $("dueLabel").textContent = "赤ちゃんに会えるまで";
+      $("dueCountdown").innerHTML = days > 0 ? `<div class="days-left">あと<b>${days}</b>日</div><div class="due-sub">出産予定日 <span class="nowrap">${fmtDateW(due)}</span></div>`
+        : `<div class="cd-done">${days === 0 ? "今日が予定日です 👶" : "予定日を迎えました 👶🎉"}</div>`;
     } else {
       $("dueCard").style.display = "none";
     }
@@ -569,24 +628,42 @@
   }
 
   /* ============ 発表ロック ============ */
+  // 発表までの流れ(何をすればいいか)を番号つきで
+  const steps = [
+    "下の大きなボタンを押す",
+    ...(needsPass ? ["パパ・ママから聞いた合言葉を入れる"] : []),
+    `プレゼントを${TAPS_TO_OPEN}回トントン押す`,
+    "赤ちゃんの性別が出ます 🎉",
+  ];
+  $("steps").innerHTML = steps.map((s, i) => `<li><span class="n">${i + 1}</span>${esc(s)}</li>`).join("");
+
+  let lockedPrev = null;
   function updateLock() {
     const btn = $("startBtn");
     if (!P.gender && !P.secret) {
       btn.disabled = true;
       $("revealLabel").textContent = "";
       $("revealCountdown").innerHTML = "";
+      $("steps").style.display = "none";
       $("lockNote").innerHTML = `性別が設定されていません。<br><a href="create.html" style="color:var(--girl-deep);font-weight:700">作成ページ</a>からURLを作ってください`;
       return;
     }
-    if (revealAt && revealAt > Date.now()) {
+    const locked = !!revealAt && revealAt > Date.now();
+    if (locked) {
       btn.disabled = true;
-      $("revealLabel").textContent = `発表は ${fmtDate(revealAt)} ${pad(revealAt.getHours())}:${pad(revealAt.getMinutes())} から`;
+      $("revealLabel").innerHTML = `発表は<br><span class="nowrap">${fmtDateW(revealAt)} ${fmtTime(revealAt)}</span>から`;
       renderCountdown($("revealCountdown"), revealAt, "");
-      $("revealCountdown").style.marginBottom = "14px";
-      $("lockNote").textContent = "🔒 お楽しみに…！";
+      $("revealCountdown").style.marginBottom = "16px";
+    }
+    if (locked === lockedPrev) return; // 以下は切り替わったときだけ
+    lockedPrev = locked;
+    if (locked) {
+      btn.textContent = "🔒 まだ開けられません";
+      $("lockNote").innerHTML = "時間になるとボタンが押せます。<br>その頃に、またこのページを開いてね。";
     } else {
       btn.disabled = false;
-      $("revealLabel").textContent = revealAt ? "🎉 発表の時間です！" : "👇 ボタンを押して発表を見てね";
+      btn.textContent = "🎁 押して発表を見る";
+      $("revealLabel").textContent = revealAt ? "🎉 発表の時間です！" : "発表の見かた";
       $("revealCountdown").innerHTML = "";
       $("revealCountdown").style.marginBottom = "0";
       $("lockNote").textContent = "";
@@ -596,9 +673,21 @@
   /* ============ カレンダー ============ */
   const today = new Date();
   let calY, calM;
-  const initCal = due || today;
-  calY = initCal.getFullYear(); calM = initCal.getMonth();
-  if (!revealAt) $("legendReveal").style.display = "none";
+  calY = today.getFullYear(); calM = today.getMonth(); // ジャンプピルの先頭「今日」の月から
+  // 予定日まで「あと○日」がきりの良い日(ジャンプピルと日付一覧で使う)
+  const MILESTONES = [200, 150, 100, 50, 30, 10, 1];
+  const daysToDue = d => due ? Math.round((startOfDay(due) - startOfDay(d)) / 864e5) : null;
+  const milestoneDate = n => new Date(due.getFullYear(), due.getMonth(), due.getDate() - n);
+  // 今日より後で一番近い節目。MILESTONES は大きい順
+  const nextMilestone = due ? MILESTONES.find(n => n < daysToDue(today)) : undefined;
+  // ジャンプピル: 今日 → (発表日) → あと○日 → 予定日 を日付順に。過去の日は出さない
+  const isAhead = d => d && startOfDay(d) > startOfDay(today);
+  const jumps = [
+    { label: "今日", dot: "today", date: today },
+    isAhead(revealAt) && { label: "発表日", dot: "rv", date: revealAt },
+    nextMilestone && { label: `あと${nextMilestone}日`, dot: "ms", date: milestoneDate(nextMilestone) },
+    isAhead(due) && { label: "予定日", dot: "due", date: due },
+  ].filter(Boolean).sort((a, b) => a.date - b.date);
 
   function renderCal() {
     $("calTitle").textContent = `${calY}年 ${calM + 1}月`;
@@ -628,27 +717,41 @@
     }
     grid.innerHTML = html;
     const inView = d => d && d.getFullYear() === calY && d.getMonth() === calM;
-    $("legendToday").classList.toggle("current", inView(today));
-    $("legendDue").classList.toggle("current", inView(due));
-    $("legendReveal").classList.toggle("current", inView(revealAt));
+    document.querySelectorAll("#calLegend .legend-btn").forEach(b => b.classList.toggle("current", inView(jumps[b.dataset.i].date)));
   }
   $("calPrev").onclick = () => { calM--; if (calM < 0) { calM = 11; calY--; } renderCal(); };
   $("calNext").onclick = () => { calM++; if (calM > 11) { calM = 0; calY++; } renderCal(); };
   // 凡例タップでその日の月へジャンプ
   const jumpTo = d => { calY = d.getFullYear(); calM = d.getMonth(); renderCal(); };
-  $("legendToday").onclick = () => jumpTo(today);
-  $("legendDue").onclick = () => due && jumpTo(due);
-  $("legendReveal").onclick = () => revealAt && jumpTo(revealAt);
-  if (!due) $("legendDue").style.display = "none";
+  // 「›」は次のピルとひとまとまりにして、折り返しても行末に矢印だけ残らないように
+  $("calLegend").innerHTML = jumps.map((j, i) =>
+    `<span class="legend-item">${i ? '<span class="legend-arrow" aria-hidden="true">›</span>' : ""}` +
+    `<button type="button" class="legend-btn" data-i="${i}"><i class="dot ${j.dot}"></i>${j.label}</button></span>`).join("");
+  $("calLegend").onclick = e => { const b = e.target.closest(".legend-btn"); if (b) jumpTo(jumps[b.dataset.i].date); };
+  // カレンダーが苦手な人向けに、日付を文字でも並べる(日付順)
+  $("keyDates").innerHTML = [
+    nextMilestone && { date: milestoneDate(nextMilestone), html: `<span>🎯 あと${nextMilestone}日</span><b>${fmtDateW(milestoneDate(nextMilestone))}</b>` },
+    due && { date: due, html: `<span>👶 出産予定日</span><b>${fmtDateW(due)}</b>` },
+    revealAt && { date: revealAt, html: `<span>🎁 発表</span><b>${fmtDateW(revealAt)} ${fmtTime(revealAt)}</b>` },
+  ].filter(Boolean).sort((a, b) => a.date - b.date).map(k => `<div>${k.html}</div>`).join("");
+  if (!due && !revealAt) $("keyDates").style.display = "none";
+
+  /* ============ 飾りの絵文字 ============ */
+  // 男の子系と女の子系は必ず同じ数だけ使い、どちらかに偏って見えないようにする
+  const BOY_EMOJI = ["👦", "💙", "🚙", "🧢"];         // 青系
+  const GIRL_EMOJI = ["👧", "🩷", "🎈", "🎀"];        // 赤・ピンク系
+  const NEUTRAL_EMOJI = ["👶", "🐣", "🧸", "⭐", "✨", "💫", "🍼"]; // 青でも赤でもない
+  const shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(x => x[1]);
 
   /* ============ 背景バルーン ============ */
   (function floaters() {
-    const items = ["🎈", "💙", "🐣", "🩷", "✨", "🍼", "🐣", "🎀", "⭐"];
+    // 男の子系3・女の子系3・中性4 をランダムに選んで混ぜる
+    const items = shuffle([...shuffle(BOY_EMOJI).slice(0, 3), ...shuffle(GIRL_EMOJI).slice(0, 3), ...shuffle(NEUTRAL_EMOJI).slice(0, 4)]);
     const box = $("floaters");
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < items.length; i++) {
       const s = document.createElement("span");
       s.className = "floater";
-      s.textContent = items[i % items.length];
+      s.textContent = items[i];
       s.style.left = Math.random() * 100 + "%";
       s.style.fontSize = 18 + Math.random() * 22 + "px";
       s.style.animationDuration = 12 + Math.random() * 14 + "s";
@@ -744,8 +847,8 @@
     stage.className = "stage show";
     gift.className = "gift idle"; gift.style.display = "";
     gift.style.setProperty("--grow", 1);
-    $("hint").textContent = "プレゼントをタップしてね";
-    $("remain").innerHTML = `あと <b>${TAPS_TO_OPEN}</b> 回タップ`;
+    $("hint").textContent = "プレゼントを指で押してね";
+    $("remain").innerHTML = `あと <b>${TAPS_TO_OPEN}</b> 回`;
     $("remain").style.display = "";
     $("taps").style.display = "";
     $("taps").innerHTML = Array.from({ length: TAPS_TO_OPEN }, () => '<i class="tap-dot"></i>').join("");
@@ -771,14 +874,39 @@
       setTimeout(() => sp.remove(), 700);
     });
   }
+  // プレゼントの後ろから絵文字が飛び出す。1回ごとに男の子系/女の子系を同数にし、残りは中性
+  // (2個 → 男1女1 / 3個 → 男1女1中1 / 5個 → 男2女2中1)
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  function popOut(count) {
+    const k = Math.floor(count / 2);
+    const items = shuffle([
+      ...shuffle(BOY_EMOJI).slice(0, k), ...shuffle(GIRL_EMOJI).slice(0, k),
+      ...Array.from({ length: count - k * 2 }, () => pick(NEUTRAL_EMOJI)),
+    ]);
+    for (const emoji of items) {
+      const sp = document.createElement("span");
+      sp.className = "pop";
+      sp.textContent = emoji;
+      const a = (-170 + Math.random() * 160) * Math.PI / 180; // 主に上〜斜め方向へ
+      const dist = 150 + Math.random() * 40; // 箱(約170px)の外まで出す
+      sp.style.setProperty("--dx", Math.cos(a) * dist + "px");
+      sp.style.setProperty("--dy", Math.sin(a) * dist + "px");
+      sp.style.setProperty("--rot", (Math.random() - .5) * 60 + "deg");
+      sp.style.fontSize = 22 + Math.random() * 10 + "px";
+      sp.style.animationDelay = Math.random() * 120 + "ms";
+      gift.appendChild(sp);
+      setTimeout(() => sp.remove(), 1600);
+    }
+  }
   gift.addEventListener("click", async e => {
     if (busy || taps >= TAPS_TO_OPEN) return;
     taps++;
     gift.classList.remove("idle");
     gift.style.setProperty("--grow", 1 + (taps / TAPS_TO_OPEN) * 0.35); // タップごとに少しずつ膨らむ
     sparkle(e.clientX || innerWidth / 2, e.clientY || innerHeight / 2);
+    popOut(taps >= TAPS_TO_OPEN ? 5 : taps / TAPS_TO_OPEN < 0.5 ? 2 : 3); // 前半2個・後半3個・最後5個
     const left = TAPS_TO_OPEN - taps;
-    $("remain").innerHTML = left ? `あと <b>${left}</b> 回タップ` : "";
+    $("remain").innerHTML = left ? `あと <b>${left}</b> 回` : "";
     document.querySelectorAll(".tap-dot").forEach((d, i) => d.classList.toggle("on", i < taps));
     gift.classList.remove("shake-1", "shake-2", "shake-3"); void gift.offsetWidth;
     gift.classList.add(taps >= TAPS_TO_OPEN ? "shake-3" : taps / TAPS_TO_OPEN < 0.5 ? "shake-1" : "shake-2");
@@ -795,6 +923,7 @@
 
   async function climax() {
     await sleep(600);
+    if (!stage.classList.contains("show")) return; // 途中で「もどる」された
     // 暗転 + 心音
     stage.classList.add("dark");
     gift.style.display = "none"; $("taps").style.display = "none"; $("remain").style.display = "none";
@@ -808,11 +937,11 @@
   }
 
   function reveal() {
-    const g = GENDERS[P.gender] || { lead: "IT'S…", label: P.label || "？", emoji: P.emoji || "🎉", color: "--gold", deep: "--gold-deep" };
+    const g = GENDERS[P.gender] || { lead: "生まれてくるのは…", label: P.label || "？", emoji: P.emoji || "🎉", color: "--gold", deep: "--gold-deep" };
     const color = P.color || cssVar(g.color), deep = P.color || cssVar(g.deep);
     root.style.setProperty("--reveal", color);
     root.style.setProperty("--reveal-deep", deep);
-    stage.className = "stage show";
+    stage.className = "stage show done";
     stage.style.background = `radial-gradient(circle at 50% 40%, #fff 0%, color-mix(in srgb, ${color} 35%, #fff) 80%)`;
     document.body.classList.add("revealed");
 
@@ -865,19 +994,23 @@
       stage.style.background = "";
       resetStage();
     } catch (_) {
-      $("passErr").textContent = "合言葉がちがうみたい…🤔";
+      $("passErr").textContent = "合言葉がちがうようです。もう一度入れてみてね";
       box.classList.remove("shake-1"); void box.offsetWidth; box.classList.add("shake-1");
     }
   };
-  // もう一度 → 発表前のトップ(カレンダー)へ戻る
-  $("replayBtn").onclick = () => {
+  // 最初の画面 → 発表前のトップ(カレンダー)へ戻る
+  function closeStage() {
     stage.className = "stage";
     stage.style.background = "";
     document.body.classList.remove("revealed");
     root.style.removeProperty("--reveal"); root.style.removeProperty("--reveal-deep");
     parts = [];
     scrollTo({ top: 0, behavior: "smooth" });
-  };
+  }
+  $("replayBtn").onclick = closeStage;
+  $("stageClose").onclick = closeStage;
+  // もう一度見る → プレゼントからやり直し(誰かに見せるとき用)
+  $("againBtn").onclick = () => { parts = []; stage.style.background = ""; resetStage(); };
   // 共有文面には性別を含めない(転送先へのネタバレ防止)
   const SHARE_TEXT = "👶 ベビーの性別発表 👶\n男の子？女の子？プレゼントを開けて確かめてね🎁";
   $("lineShareBtn").href = `https://line.me/R/share?text=${encodeURIComponent(`${SHARE_TEXT}\n${location.href}`)}`;
