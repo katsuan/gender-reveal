@@ -212,6 +212,11 @@
     background: radial-gradient(circle at 50% 40%, #fff 0%, var(--bg-bottom) 70%);
   }
   .stage.show { display: flex; }
+  /* 結果画面: 中身が画面より高くなってもスクロールでき、収まるときは中央に置く */
+  .stage.done { justify-content: flex-start; overflow-y: auto; }
+  .stage.done .result { margin: auto 0; }
+  /* プレゼント画面の空欄(ヒント・残り回数など)が場所を取って結果が下にずれないように */
+  .stage.done .gift, .stage.done .hint, .stage.done .remain, .stage.done .taps, .stage.done .heart { display: none; }
   .stage.dark { background: radial-gradient(circle at 50% 45%, #2a2340 0%, #0f0b1a 75%); color: #fff; transition: background .6s; }
 
   .hint { font-size: 22px; color: var(--ink); margin-top: 26px; min-height: 1.5em; font-weight: 800; }
@@ -303,6 +308,15 @@
   .result .emoji.many { font-size: 52px; white-space: nowrap; }
   .result .emoji { font-size: 72px; animation: zoomIn 1s cubic-bezier(.2,1.6,.4,1) both .5s; }
   .result .baby-name { font-size: 24px; font-weight: 800; color: var(--reveal-deep); animation: fadeUp .8s both .9s; }
+  /* 残り日数は結果(性別・名前・メッセージ)が出そろった後に、少し遅れて出す */
+  .result .due-left-result { font-size: 17px; font-weight: 700; color: var(--ink-soft); animation: fadeUp 1s both 2.4s; }
+  .result .due-left-result:empty { display: none; }
+  .result .due-left-result b { font-size: 26px; color: var(--reveal-deep); margin: 0 4px; font-variant-numeric: tabular-nums; }
+  /* 高さ0から中身の高さまで広げる(grid の 0fr→1fr)。広がるにつれ結果が上へ動いて場所を空ける */
+  .result .after-wrap { display: grid; grid-template-rows: 0fr; animation: makeRoom 1s ease both 3.8s; }
+  .result .after { min-height: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; padding: 0 8px; }
+  .result .after .actions { margin-bottom: 12px; } /* 余白は中身側に持たせ、閉じている間は高さ0にする */
+  @keyframes makeRoom { to { grid-template-rows: 1fr; } }
   .result .msg { font-size: 18px; line-height: 1.8; color: var(--ink); max-width: 340px; white-space: pre-wrap; animation: fadeUp .8s both 1.2s; }
   .result .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 12px; animation: lateIn 1.2s ease both 4.4s; }
   .pill {
@@ -418,6 +432,9 @@
     <div class="emoji" id="answerEmoji"></div>
     <div class="baby-name" id="babyName"></div>
     <div class="msg" id="msg"></div>
+    <div class="due-left-result" id="resultDue"></div>
+    <!-- ボタン類: 最初は場所を取らず、結果を画面中央に。少し後で場所を空けて出てくる -->
+    <div class="after-wrap"><div class="after">
     <div class="share-box">
       <a class="pill line-btn" id="lineFlexBtn" target="_blank" rel="noopener">💌 LINEで家族にも送る</a>
       <p class="share-note">性別は書かずに、このページだけを送ります。<br>受け取った人も、プレゼントを開けて楽しめます🎁</p>
@@ -432,6 +449,7 @@
       <button class="pill" id="replayBtn">最初の画面へ</button>
       <button class="pill" id="shareBtn">リンクをコピー</button>
     </div>
+    </div></div>
   </div>
 </div>
 
@@ -960,6 +978,10 @@
     $("answerEmoji").classList.toggle("many", Array.from($("answerEmoji").textContent).length > 3);
     $("babyName").textContent = P.name || ""; // 入力どおりに表示(「ちゃん」は付けない)
     $("msg").textContent = P.msg || "";
+    // 結果のスクショにも予定日までの日数が残るように
+    const daysLeft = due ? Math.round((startOfDay(due) - startOfDay(new Date())) / 864e5) : null;
+    $("resultDue").innerHTML = daysLeft > 0 ? `赤ちゃんに会えるまで あと<b>${daysLeft}</b>日`
+      : daysLeft === 0 ? "今日が出産予定日です 👶" : "";
     $("result").classList.add("show");
 
     const palette = /boy/.test(P.gender) ? [color, deep, "#ffffff", "#bfe3ff", cssVar("--gold")]
