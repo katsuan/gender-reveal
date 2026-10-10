@@ -272,6 +272,58 @@
     return bytesToB64url(all);
   }
 
+  /* ============ 圧縮URL(v3)の生成 ============
+   * #<base64url> に入れる(? より2文字短く、# 以降はサーバーにも送られない)。読み方は index.html の readV3
+   * bytes = [0x30|合言葉あり][項目マスク][公開項目…][合言葉あり: salt 8 | なし: -][暗号文+tag 12][合言葉なし: 鍵 12]
+   *   マスク: 1=予定日 2=発表日時 4=タップ回数 8=パパ 16=ママ 32=タイトル
+   *   予定日=2020-01-01からの日数(2byte) 発表日時=同じく分(3byte、壁時計の時刻のまま) 文字列=長さ(可変長)+UTF-8
+   * 秘密 = [性別番号(下3bit) | 1名前の有無<<3 | メッセージ<<4 | 表示テキスト<<5 | 絵文字<<6 | 色<<7][文字列…][色 RGB 3byte]
+   * 鍵はリンクごとに使い捨てなので IV は固定(0)。合言葉なしは HKDF、ありは PBKDF2 で鍵を作る
+   */
+  const V3_EPOCH = Date.UTC(2020, 0, 1);
+  const V3_GENDERS = ["boy", "girl", "twins-boys", "twins-girls", "twins-mixed", "twins", "custom"];
+  const V3_INFO = new TextEncoder().encode("gender-reveal v3");
+  function pushVarint(out, n) { while (n >= 128) { out.push((n & 127) | 128); n >>>= 7; } out.push(n); }
+  function pushStr(out, s) { const b = new TextEncoder().encode(s); pushVarint(out, b.length); out.push(...b); }
+
+  // 範囲外(2020年より前・発表日時が2051年以降など)は null を返し、v2 で作る
+  async function buildTokenV3(pub, sec, pass) {
+    const rand = n => crypto.getRandomValues(new Uint8Array(n));
+    const ymd = v => v.split(/[-T:]/).map(Number);
+    const out = [0x30 | (pass ? 1 : 0), 0];
+    if (pub.due) {
+      const [y, m, d] = ymd(pub.due), days = (Date.UTC(y, m - 1, d) - V3_EPOCH) / 864e5;
+      if (!(days >= 0 && days < 65536)) return null;
+      out[1] |= 1; out.push(days >> 8, days & 255);
+    }
+    if (pub.reveal) {
+      const [y, m, d, h, mi] = ymd(pub.reveal), mins = (Date.UTC(y, m - 1, d, h, mi) - V3_EPOCH) / 6e4;
+      if (!(mins >= 0 && mins < 2 ** 24)) return null;
+      out[1] |= 2; out.push(mins >> 16, (mins >> 8) & 255, mins & 255);
+    }
+    if (pub.taps && pub.taps !== "5") { out[1] |= 4; out.push(Number(pub.taps)); } // 既定の5回は省略
+    [["dad", 8], ["mom", 16], ["title", 32]].forEach(([k, bit]) => { if (pub[k]) { out[1] |= bit; pushStr(out, pub[k]); } });
+
+    const plain = [V3_GENDERS.indexOf(sec.gender)];
+    [["name", 8], ["msg", 16], ["label", 32], ["emoji", 64]].forEach(([k, bit]) => { if (sec[k]) { plain[0] |= bit; pushStr(plain, sec[k]); } });
+    if (sec.color) { plain[0] |= 128; plain.push(...sec.color.replace("#", "").match(/../g).map(h => parseInt(h, 16))); }
+
+    let aes, salt = [], key = [];
+    if (pass) {
+      salt = rand(8);
+      const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pass), "PBKDF2", false, ["deriveKey"]);
+      aes = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: 150000, hash: "SHA-256" },
+        base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);
+    } else {
+      key = rand(12);
+      const base = await crypto.subtle.importKey("raw", key, "HKDF", false, ["deriveKey"]);
+      aes = await crypto.subtle.deriveKey({ name: "HKDF", hash: "SHA-256", salt: new Uint8Array(0), info: V3_INFO },
+        base, { name: "AES-GCM", length: 128 }, false, ["encrypt"]);
+    }
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv: new Uint8Array(12), tagLength: 96 }, aes, new Uint8Array(plain)));
+    return bytesToB64url(new Uint8Array([...out, ...salt, ...ct, ...key]));
+  }
+
   /* ============ LINE共有 ============ */
   // おくるカード（お知らせカード）にカード内容を渡して共有する
   const FLEX_SENDER = "https://liff.line.me/2009927876-DioOJd0z/card/";
@@ -323,7 +375,10 @@
     const pub = pick(PUBLIC_KEYS), sec = pick(SECRET_KEYS);
     if (sec.gender === "twins") sec.gender = fd.get("twins"); // 双子は2人の性別で保存
     const url = new URL("./", location.href); // index.html は省略
-    url.searchParams.set("p", await buildToken(pub, sec, (fd.get("pass") || "").trim()));
+    const pass = (fd.get("pass") || "").trim();
+    const v3 = await buildTokenV3(pub, sec, pass);
+    if (v3) url.hash = v3; // 圧縮形式(v3)。範囲外のときだけ従来の ?p= (v2)
+    else url.searchParams.set("p", await buildToken(pub, sec, pass));
     $("url").textContent = url.href;
     $("open").href = url.href;
     $("lineFlex").href = buildFlexUrl(url.href, pub, !!(fd.get("pass") || "").trim());
