@@ -273,7 +273,8 @@
   }
 
   /* ============ LINE共有 ============ */
-  const FLEX_SENDER = "https://liff.line.me/2011082239-Ej8nLTeE";
+  // おくるカード（お知らせカード）にカード内容を渡して共有する
+  const FLEX_SENDER = "https://liff.line.me/2009927876-DioOJd0z/card/";
   const LINE_URI_MAX = 1000; // LINE の URI アクション上限
   const NEUTRAL_COLOR = "#9b7fd1"; // 性別が推測されない中間色
 
@@ -296,6 +297,7 @@
       showDate: "false",
       theme: "custom",
       customColor: NEUTRAL_COLOR,
+      bubbleSize: "giga",
       showAction: "true",
       actionLabel: "🎁 開けてみる",
       actionUrl: revealUrl,

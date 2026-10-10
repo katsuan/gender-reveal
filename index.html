@@ -1042,8 +1042,8 @@
   // もう一度見る → プレゼントからやり直し(誰かに見せるとき用)
   $("againBtn").onclick = () => { parts = []; stage.style.background = ""; resetStage(); };
 
-  // FlexSender(LIFF)にカード内容を渡して共有。create.html と同じ中立的なカード
-  const FLEX_SENDER = "https://liff.line.me/2011082239-Ej8nLTeE";
+  // おくるカード（お知らせカード）にカード内容を渡して共有。create.html と同じ中立的なカード
+  const FLEX_SENDER = "https://liff.line.me/2009927876-DioOJd0z/card/";
   const NEUTRAL_COLOR = "#9b7fd1";
   function buildFlexUrl() {
     const parents = [P.dad, P.mom].filter(Boolean).join(" & ");
@@ -1060,6 +1060,7 @@
       showDate: "false",
       theme: "custom",
       customColor: NEUTRAL_COLOR,
+      bubbleSize: "giga",
       showAction: "true",
       actionLabel: "🎁 開けてみる",
       actionUrl: location.href,
