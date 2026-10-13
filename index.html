@@ -367,6 +367,13 @@
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
   }
+  /* 画像で保存：発表の結果を画像に描いて出し、長押しで保存してもらう */
+  .snap-sheet { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px; background: rgba(20, 16, 40, .55); }
+  .snap-card { display: grid; gap: 10px; width: min(100%, 420px); max-height: 100%; overflow: auto; padding: 16px; border-radius: var(--radius-lg); background: #fff; text-align: center; }
+  .snap-card img { width: 100%; height: auto; border-radius: var(--radius-md); box-shadow: 0 4px 16px rgba(0,0,0,.12); -webkit-touch-callout: default; }
+  .snap-card p { font-size: 15px; color: var(--ink-soft); }
+  .snap-actions { display: grid; gap: 8px; }
+  .snap-actions .pill { text-decoration: none; text-align: center; }
 </style>
 </head>
 <body>
@@ -448,6 +455,7 @@
       <button class="pill" id="againBtn">🔁 もう一度見る</button>
       <button class="pill" id="replayBtn">最初の画面へ</button>
       <button class="pill" id="shareBtn">リンクをコピー</button>
+      <button class="pill" id="snapBtn">📷 画像で保存</button>
     </div>
     </div></div>
   </div>
@@ -1165,6 +1173,85 @@
     catch (_) { prompt("長押ししてコピーしてください", text); }
   };
   // ボタン名どおりリンクだけをコピー(見えない文を混ぜない)
+  /* ============ 画像で保存 ============ */
+  // 発表後の画面と同じ内容を 1080×1350 の画像に描き直す（画面をそのまま写すとスマホで崩れやすいため）
+  $("snapBtn").onclick = async () => {
+    if (document.fonts && document.fonts.ready) await document.fonts.ready;
+    const W = 1080, H = 1350;
+    const canvas = document.createElement("canvas");
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext("2d");
+    const FONT = cssVar("--font");
+    const color = cssVar("--reveal"), deep = cssVar("--reveal-deep");
+    const ink = cssVar("--ink"), soft = cssVar("--ink-soft");
+    const font = (size, weight = 800) => `${weight} ${size}px ${FONT}`;
+    // 幅に収まるまで小さくして1行で描く
+    const fit = (text, y, size, { weight = 800, fill = ink, min = 24, maxWidth = W - 200 } = {}) => {
+      if (!text) return;
+      let s = size;
+      ctx.font = font(s, weight);
+      while (s > min && ctx.measureText(text).width > maxWidth) { s -= 2; ctx.font = font(s, weight); }
+      ctx.fillStyle = fill; ctx.textAlign = "center"; ctx.fillText(text, W / 2, y, maxWidth);
+    };
+    // 発表の画面と同じく、中心が白で外側が結果の色のグラデーション（色は白に寄せて薄める）
+    const light = (hex, amount) => {
+      const m = /^#?([0-9a-f]{6})$/i.exec(hex);
+      if (!m) return "#f3ecff";
+      const n = parseInt(m[1], 16);
+      const ch = (shift) => Math.round(255 - (255 - ((n >> shift) & 255)) * amount);
+      return `rgb(${ch(16)}, ${ch(8)}, ${ch(0)})`;
+    };
+    const g = ctx.createRadialGradient(W / 2, H * .4, 0, W / 2, H * .4, H * .8);
+    g.addColorStop(0, "#ffffff");
+    g.addColorStop(1, light(color, .35));
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    fit(P.title || "ベビーの性別発表", 150, 52, { fill: soft });
+    const parents = [P.dad, P.mom].filter(Boolean).join(" & ");
+    fit(parents ? `${parents} より` : "", 215, 36, { weight: 700, fill: soft });
+    fit($("lead").textContent, 340, 56, { weight: 700 });
+    fit($("answer").textContent, 520, 150, { fill: deep });
+    ctx.font = font(170, 400); ctx.textAlign = "center"; ctx.fillStyle = ink;
+    ctx.fillText($("answerEmoji").textContent, W / 2, 740, W - 160);
+    fit($("babyName").textContent, 880, 72, { fill: deep });
+    const msg = $("msg").textContent;
+    // メッセージは2行まで（長いときは区切って詰める）
+    if (msg) {
+      ctx.font = font(40, 700);
+      const lines = [];
+      let line = "";
+      for (const ch of Array.from(msg)) {
+        if (ch === "\n" || ctx.measureText(line + ch).width > W - 220) { lines.push(line); line = ch === "\n" ? "" : ch; }
+        else line += ch;
+      }
+      lines.push(line);
+      lines.slice(0, 2).forEach((l, i) => fit(l, 980 + i * 56, 40, { weight: 700 }));
+    }
+    fit($("resultDue").textContent, 1150, 44, { fill: deep });
+    const now = new Date();
+    fit(`${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()} ・ ベビーの性別発表`, H - 60, 26, { weight: 700, fill: soft });
+
+    const blob = await new Promise((r) => canvas.toBlob(r, "image/png"));
+    const url = URL.createObjectURL(blob);
+    const file = new File([blob], "gender-reveal.png", { type: "image/png" });
+    const sheet = document.createElement("div");
+    sheet.className = "snap-sheet";
+    sheet.innerHTML = `<div class="snap-card" role="dialog" aria-modal="true" aria-label="画像で保存"><img alt="発表の画像"><p>画像を長押しすると保存できます。</p><div class="snap-actions"></div><button class="pill" type="button">閉じる</button></div>`;
+    sheet.querySelector("img").src = url;
+    const actions = sheet.querySelector(".snap-actions");
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      const share = Object.assign(document.createElement("button"), { type: "button", className: "pill primary", textContent: "📤 共有・保存" });
+      share.onclick = () => navigator.share({ files: [file] }).catch(() => {});
+      actions.append(share);
+    }
+    actions.append(Object.assign(document.createElement("a"), { className: "pill", href: url, download: file.name, textContent: "⬇️ ダウンロード" }));
+    const close = () => { sheet.remove(); URL.revokeObjectURL(url); };
+    sheet.querySelector(".snap-card > button").onclick = close;
+    sheet.addEventListener("click", (e) => { if (e.target === sheet) close(); });
+    document.body.append(sheet);
+  };
+
   $("shareBtn").onclick = async () => {
     try { await navigator.clipboard.writeText(SHARE_URL); $("shareBtn").textContent = "コピーしました！"; }
     catch (_) { prompt("長押ししてコピーしてください", SHARE_URL); }
