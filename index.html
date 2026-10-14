@@ -1155,6 +1155,7 @@
       actionLabel: "🎁 開けてみる",
       actionUrl: SHARE_URL,
     });
+    q.set("from", "gender-reveal"); // おくるん側で、ジェンダーリビールから来たと数える（流入口）
     return `${FLEX_SENDER}?${q}`;
   }
   $("lineFlexBtn").href = buildFlexUrl();
