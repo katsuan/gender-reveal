@@ -60,3 +60,7 @@ index.html?gender=girl&due=2027-02-14&dad=太郎&mom=花子&name=べびちゃん
 
 色・サイズは `index.html` 冒頭の `:root` の CSS 変数で一括変更できます。
 タップ回数の既定値は JS 冒頭の `DEFAULT_TAPS` です。
+
+## 紹介の窓口
+
+「📤 ジェンダーリビールを紹介する」（作成ページのいちばん下）は、おくるんの `shared/tool-share.js`（`data-tool="babyq"`）。押すとおくるんで紫の紹介カードを作って LINE に送れる（リンクのシェアも選べる）。中身は line-share の `data/hub-links.json` の `key: "babyq"`。
