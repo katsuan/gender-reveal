@@ -13,7 +13,7 @@
   "bg"（背景と同じグラデーション。白い形のまわりを削って見分けやすくするのに使う）、(r, g, b)（色。紙吹雪など）
   "deco": True を付けた図形はアイコンだけに描き、ロゴの Q には入れない（まわりの飾り）
 
-このファイルは pomodoro・countdown・gender-reveal の tools/ に同じものを置く（直したら3つともそろえる）。
+このファイルは pomodoro・countdown・gender-reveal・line-p2p-othello の tools/ に同じものを置く（直したらすべてそろえる）。
 Pillow・fontTools・Jua（SIL Open Font License 1.1、~/Library/Fonts/Jua.ttf）・macOS のヒラギノ角ゴシックが必要。
 """
 import math
@@ -245,9 +245,11 @@ class Brand:
 
     # ---- 横長のロゴ（Jua の字を並べ、Q だけアイコンの形） ----
 
-    def logo_svg(self, word, mark, mark_center, mark_radius, label):
+    def logo_svg(self, word, mark, mark_center, mark_radius, label, fills=None, plates=None):
         """word の "Q" の位置に、アイコンの図形 mark を置く。mark_center・mark_radius はアイコンの中の Q の輪の中心と外側の半径
-        （字の高さ＝輪の直径になるよう縮める）。輪の外に出るしっぽの分だけ、次の字を右へずらす"""
+        （字の高さ＝輪の直径になるよう縮める）。輪の外に出るしっぽの分だけ、次の字を右へずらす。
+        fills は字ごとの色（word と同じ長さの並び。(r, g, b) か None＝白。Q の位置は使わない）。
+        plates は字の後ろに敷く丸い板（[(字の位置の並び, (r, g, b)), ...]。ひっくりの黒い石・白い石など）"""
         from fontTools.pens.boundsPen import BoundsPen
         from fontTools.pens.svgPathPen import SVGPathPen
         from fontTools.pens.transformPen import TransformPen
@@ -272,8 +274,14 @@ class Brand:
         bx0, by0, bx1, by1 = shapes_bounds(mark)
         mx0, my0 = (bx0 - mark_center[0]) * k, (by0 - mark_center[1]) * k
         mx1, my1 = (bx1 - mark_center[0]) * k, (by1 - mark_center[1]) * k
+        plate_of = {i: n for n, (indices, _) in enumerate(plates or []) for i in indices}
+        plate_px, plate_py = h * 0.3, h * 0.16  # 板の、字のまわりの余白（横・縦）
+        spans = {}  # 板ごとの字の左右のはし
         paths, x, q = [], 0.0, None
-        for char in word:
+        for i, char in enumerate(word):
+            plate = plate_of.get(i)
+            if plate is not None and plate_of.get(i - 1) != plate:
+                x += plate_px  # 板に入るところは、板の余白の分だけあける
             if char == "Q":
                 cx = x - mx0
                 q = (cx, h / 2)
@@ -283,8 +291,16 @@ class Brand:
             origin = x - b[0]
             pen = SVGPathPen(glyphs)
             glyphs[cmap[ord(char)]].draw(TransformPen(pen, (1, 0, 0, -1, origin, top)))
-            paths.append(pen.getCommands())
+            color = fills[i] if fills else None
+            # 字のふちは、板の上なら板の色、なければ背景の色でなぞる
+            stroke = hex_(plates[plate][1]) if plate is not None else "url(#g)"
+            paths.append((pen.getCommands(), hex_(color) if color else "#ffffff", stroke))
+            if plate is not None:
+                lo, hi = spans.get(plate, (origin + b[0], origin + b[2]))
+                spans[plate] = (min(lo, origin + b[0]), max(hi, origin + b[2]))
             x = origin + b[2] + gap
+            if plate is not None and plate_of.get(i + 1) != plate:
+                x += plate_px  # 板から出るところも、板の余白の分だけあける
         right = x - gap
         pad_x, pad_y = h * 0.55, h * 0.42
         y_top = min(0, q[1] + my0)
@@ -303,8 +319,13 @@ class Brand:
             f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{num(x0)} {num(y0)} {num(width)} {num(height)}" role="img" aria-label="{label}">'
             f"<defs>{self.gradient_svg(x0, y0, width, height)}{self.gradient_svg(ix0, iy0, width / k, height / k, gid='gm')}</defs>"
             f'<rect x="{num(x0)}" y="{num(y0)}" width="{num(width)}" height="{num(height)}" rx="{num(h * 0.3)}" fill="url(#g)"/>'
-            f'<g fill="#ffffff" stroke="url(#g)" stroke-width="{num(thin)}" stroke-linejoin="round">'
-            + "".join(f'<path d="{d}"/>' for d in paths)
+            + "".join(
+                f'<rect x="{num(lo - plate_px)}" y="{num(-plate_py)}" width="{num(hi - lo + plate_px * 2)}" height="{num(h + plate_py * 2)}" '
+                f'rx="{num(h / 2 + plate_py)}" fill="{hex_(plates[n][1])}"/>'
+                for n, (lo, hi) in spans.items()
+            )
+            + f'<g stroke-width="{num(thin)}" stroke-linejoin="round">'
+            + "".join(f'<path d="{d}" fill="{color}" stroke="{stroke}"/>' for d, color, stroke in paths)
             + "</g>"
             + mark_g
             + "</svg>\n"
@@ -312,7 +333,7 @@ class Brand:
 
     # ---- OGP（1200×630。左にアイコン、右に名前・英字・説明） ----
 
-    def write_ogp(self, path, shapes, name, en, lines, decorate=None, name_size=104):
+    def write_ogp(self, path, shapes, name, en, lines, decorate=None, name_size=104, en_fills=None, en_plates=None):
         W, H, S = 1200, 630, 2
         big = (W * S, H * S)
         img = self.gradient_image(*big).convert("RGBA")
@@ -332,8 +353,24 @@ class Brand:
         d.text((x, 250 * S), name, font=hira(8, name_size), fill=(255, 255, 255), anchor="ls")
         jua = ImageFont.truetype(str(FONT_PATH), 46 * S)
         cx = x
-        for ch in en:  # 字の間を少しあける
-            d.text((cx, 322 * S), ch, font=jua, fill=(255, 255, 255, 230), anchor="ls")
+        # 字の間を少しあける。en_fills で字ごとの色（None＝白）、en_plates で字の後ろに丸い板（ロゴと同じ）
+        plate_of = {i: n for n, (indices, _) in enumerate(en_plates or []) for i in indices}
+        pad = 12 * S
+        places = []
+        for i, ch in enumerate(en):
+            if i in plate_of and plate_of.get(i - 1) != plate_of[i]:
+                cx += pad
+            places.append(cx)
+            cx += d.textlength(ch, font=jua) + 10 * S
+            if i in plate_of and plate_of.get(i + 1) != plate_of[i]:
+                cx += pad
+        for n, (indices, color) in enumerate(en_plates or []):
+            x0 = places[indices[0]] - pad
+            x1 = places[indices[-1]] + d.textlength(en[indices[-1]], font=jua) + pad
+            d.rounded_rectangle((x0, 280 * S, x1, 336 * S), radius=28 * S, fill=color)
+        for i, ch in enumerate(en):
+            color = en_fills[i] if en_fills and en_fills[i] else (255, 255, 255)
+            d.text((places[i], 322 * S), ch, font=jua, fill=color + (255,), anchor="ls")
             cx += d.textlength(ch, font=jua) + 10 * S
         for i, line in enumerate(lines):
             d.text((x, (410 + 56 * i) * S), line, font=hira(6, 40), fill=(255, 255, 255), anchor="ls")
