@@ -50,11 +50,11 @@
   /* 絵文字までグラデーションで塗られないよう、文字部分だけに掛ける */
   h1 .grad { background: linear-gradient(90deg, var(--boy-deep), var(--girl-deep)); -webkit-background-clip: text; background-clip: text; color: transparent; }
   .sub { text-align: center; font-size: 16px; color: var(--ink-soft); line-height: 1.7; }
-  /* 名前（ジェンダーリビール 〜BabyQ〜）。見出しの上に小さく */
-  .brand { display: grid; justify-items: center; gap: 6px; margin-bottom: -4px; }
-  .brand-logo { display: block; width: auto; height: 28px; }
-  .brand-name { margin: 0; font-size: 15px; font-weight: 800; color: var(--ink-soft); }
-  .brand-en { font-size: 13px; letter-spacing: 0.02em; }
+  /* 見出しの行：アイコン＋名前（左）と横長のロゴ（右） */
+  .brand { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+  .brand-logo { display: block; flex: 0 0 auto; width: auto; height: 28px; }
+  .brand-icon { display: block; flex: 0 0 auto; width: 28px; height: 28px; }
+  .brand-name { display: flex; align-items: center; gap: 8px; min-width: 0; margin: 0; font-size: 18px; font-weight: 800; color: var(--ink); white-space: nowrap; }
   /* 作り方の流れ */
   .flow { display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 15px; font-weight: 700; }
   .flow span { background: #fff; border-radius: 99px; padding: 6px 12px; box-shadow: 0 2px 6px rgba(0,0,0,.06); }
@@ -135,9 +135,10 @@
 </head>
 <body>
 <main class="wrap">
+  <!-- 見出しの行：アイコン＋名前（左）と横長のロゴ（右）。ほかのツール（さくせん盤・キロっく・ひっくり）と同じ形 -->
   <div class="brand">
+    <p class="brand-name"><img class="brand-icon" src="icon.svg" alt="" width="28" height="28">ジェンダーリビール</p>
     <img class="brand-logo" src="logo.svg" alt="BabyQ" width="75" height="28">
-    <p class="brand-name">ジェンダーリビール <span class="brand-en">〜BabyQ〜</span></p>
   </div>
   <h1>🎁 <span class="grad">発表ページを作る</span></h1>
   <p class="sub">赤ちゃんの性別を選ぶだけで、<br>家族に送れる発表ページができます。<br>受け取った人がプレゼントを開けるまで、<br>性別はヒミツのままです🎁</p>
