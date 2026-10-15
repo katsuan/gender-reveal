@@ -234,6 +234,8 @@
   <div data-tool-share></div>
 </main>
 
+<!-- おくるんのカードの入口（LIFF ID とカードの URL は line-share の shared/oqrn.js に1か所） -->
+<script src="https://katsuan.github.io/line-share/shared/oqrn.js"></script>
 <script src="https://katsuan.github.io/line-share/shared/tool-share.js" data-tool="babyq" defer></script>
 <script>
 (() => {
@@ -348,7 +350,6 @@
 
   /* ============ LINE共有 ============ */
   // おくるカード（お知らせカード）にカード内容を渡して共有する
-  const FLEX_SENDER = "https://liff.line.me/2009927876-DioOJd0z/card/";
   const LINE_URI_MAX = 1000; // LINE の URI アクション上限
   const NEUTRAL_COLOR = "#9b7fd1"; // 性別が推測されない中間色
 
@@ -377,7 +378,7 @@
       actionUrl: revealUrl,
     });
     q.set("from", "gender-reveal"); // おくるん側で、ジェンダーリビールから来たと数える（流入口）
-    return `${FLEX_SENDER}?${q}`;
+    return OQRN.cardUrl(q);
   }
 
   const PUBLIC_KEYS = ["due", "reveal", "dad", "mom", "title", "taps"];

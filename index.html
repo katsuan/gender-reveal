@@ -480,6 +480,8 @@
 
 <canvas id="confetti"></canvas>
 
+<!-- おくるんのカードの入口（LIFF ID とカードの URL は line-share の shared/oqrn.js に1か所） -->
+<script src="https://katsuan.github.io/line-share/shared/oqrn.js"></script>
 <script>
 (() => {
   "use strict";
@@ -1137,7 +1139,6 @@
   $("againBtn").onclick = () => { parts = []; stage.style.background = ""; resetStage(); };
 
   // おくるカード（お知らせカード）にカード内容を渡して共有。create.html と同じ中立的なカード
-  const FLEX_SENDER = "https://liff.line.me/2009927876-DioOJd0z/card/";
   const NEUTRAL_COLOR = "#9b7fd1";
   function buildFlexUrl() {
     const parents = [P.dad, P.mom].filter(Boolean).join(" & ");
@@ -1160,7 +1161,7 @@
       actionUrl: SHARE_URL,
     });
     q.set("from", "gender-reveal"); // おくるん側で、ジェンダーリビールから来たと数える（流入口）
-    return `${FLEX_SENDER}?${q}`;
+    return OQRN.cardUrl(q);
   }
   $("lineFlexBtn").href = buildFlexUrl();
   // 送るときの例文。性別は書かない(転送先へのネタバレ防止)
