@@ -59,6 +59,7 @@ def main():
     BRAND.write_ogp(
         ROOT / "ogp-create.png", SHAPES, "ジェンダーリビール", "BabyQ",
         ["赤ちゃんの性別を、プレゼントを", "開けて発表するページを作れる"], decorate, name_size=68,
+        copy="赤ちゃんの秘密を、みんなの喜びに",
     )
     print(f"アイコン・logo.svg（高さ 28px なら幅 {28 * ratio:.0f}px）・ogp-create.png を書き出しました")
 

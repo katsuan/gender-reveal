@@ -53,6 +53,8 @@
   /* 見出しの行：アイコン＋名前（左）と横長のロゴ（右） */
   .brand { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
   .brand-logo { display: block; flex: 0 0 auto; width: auto; height: 28px; }
+  /* キャッチコピー（見出しの行のすぐ下） */
+  .brand-copy { margin: 0 0 12px; color: #9B7FD1; font-size: 13px; font-weight: 800; line-height: 1.4; letter-spacing: 0.02em; }
   .brand-icon { display: block; flex: 0 0 auto; width: 28px; height: 28px; }
   .brand-name { display: flex; align-items: center; gap: 8px; min-width: 0; margin: 0; font-size: 18px; font-weight: 800; color: var(--ink); white-space: nowrap; }
   /* 作り方の流れ */
@@ -140,6 +142,7 @@
     <p class="brand-name"><img class="brand-icon" src="icon.svg" alt="" width="28" height="28">ジェンダーリビール</p>
     <img class="brand-logo" src="logo.svg" alt="BabyQ" width="75" height="28">
   </div>
+  <p class="brand-copy">赤ちゃんの秘密を、みんなの喜びに</p>
   <h1>🎁 <span class="grad">発表ページを作る</span></h1>
   <p class="sub">赤ちゃんの性別を選ぶだけで、<br>家族に送れる発表ページができます。<br>受け取った人がプレゼントを開けるまで、<br>性別はヒミツのままです🎁</p>
   <div class="flow" aria-label="作り方"><span>① 入力</span><i>›</i><span>② 作る</span><i>›</i><span>③ LINEで送る</span></div>
