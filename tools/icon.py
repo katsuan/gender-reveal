@@ -11,11 +11,11 @@
   ogp-create.png  … 作成ページ（create.html）を共有したときの画像（1200×630）。
                     受け取る人の発表ページ（index.html）は、性別をヒミツにしたプレゼントの絵（ogp.png）のまま
 
-使い方: python3 tools/icon.py（となりの line-share/tools/brandkit.py を使う）
+使い方: python3 tools/icon.py（となりのおくるん（q-oqrn）の tools/brandkit.py を使う）
 """
 from pathlib import Path
 
-import brandkit_path  # noqa: F401（となりの line-share/tools/brandkit.py を読めるようにする）
+import brandkit_path  # noqa: F401（となりのおくるん（q-oqrn）の tools/brandkit.py を読めるようにする）
 from brandkit import Brand, centered, polar, star
 
 ROOT = Path(__file__).resolve().parent.parent

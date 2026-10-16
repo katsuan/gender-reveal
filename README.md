@@ -2,7 +2,7 @@
 
 英字は BabyQ（Baby＋Q。Q は「クイズ（Question）」：男の子？女の子？）。おくるん＝OQRN・キロっく＝kiloQ と同じく Q を絵にしたロゴを使う。
 
-アイコン（`icon.svg`・`icon-32.png`・`apple-touch-icon.png`・`icon-512.png`・`icon-maskable-512.png`）・横長のロゴ（`logo.svg`）・作成ページを共有したときの画像（`ogp-create.png`）は `python3 tools/icon.py` で作る（図形を描く部分は、となりの line-share の `tools/brandkit.py`（`~/GitHub/line-share` を同じフォルダに置いて使う））。男の子の青 → 女の子のピンクのグラデーションに、白い輪の中の赤ちゃんの顔と右下のしっぽで Q。受け取る人の発表ページ（index.html）の共有画像は、性別をヒミツにしたプレゼントの絵（`ogp.png`）のまま。名前とロゴは作成ページにだけ出す。ホーム画面に追加したとき用に `manifest.webmanifest`。
+アイコン（`icon.svg`・`icon-32.png`・`apple-touch-icon.png`・`icon-512.png`・`icon-maskable-512.png`）・横長のロゴ（`logo.svg`）・作成ページを共有したときの画像（`ogp-create.png`）は `python3 tools/icon.py` で作る（図形を描く部分は、となりのおくるん（`~/GitHub/q-oqrn`。GitHub のリポジトリ名は line-share）の `tools/brandkit.py`）。男の子の青 → 女の子のピンクのグラデーションに、白い輪の中の赤ちゃんの顔と右下のしっぽで Q。受け取る人の発表ページ（index.html）の共有画像は、性別をヒミツにしたプレゼントの絵（`ogp.png`）のまま。名前とロゴは作成ページにだけ出す。ホーム画面に追加したとき用に `manifest.webmanifest`。
 
 おくるんのトップの「ほかのツール」（line-share の `data/hub-links.json`）には「ジェンダーリビール 〜BabyQ〜」として、このアイコン付きで載せている。
 
