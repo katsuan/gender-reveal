@@ -44,7 +44,9 @@
     --font: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", system-ui, sans-serif;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--font); font-size: 17px; line-height: 1.6; color: var(--ink); background: linear-gradient(180deg, var(--bg-top), var(--bg-bottom)); background-attachment: fixed; min-height: 100vh; }
+  /* iPhone・LINE の中のブラウザで、キーボードが出て画面がずれたとき、ページの外（黒）が見えないよう、ページそのものにも背景の色 */
+  html { background-color: var(--bg-bottom); }
+  body { font-family: var(--font); font-size: 17px; line-height: 1.6; color: var(--ink); background: linear-gradient(180deg, var(--bg-top), var(--bg-bottom)); min-height: 100vh; }
   .wrap { max-width: var(--max-w); margin: 0 auto; padding: 28px 16px 48px; display: flex; flex-direction: column; gap: 16px; }
   h1 { text-align: center; font-size: 28px; font-weight: 800; }
   /* 絵文字までグラデーションで塗られないよう、文字部分だけに掛ける */
