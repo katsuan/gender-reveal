@@ -62,10 +62,6 @@
   html { background-color: var(--bg-bottom); }
   body { font-family: var(--font); font-size: 17px; line-height: 1.6; color: var(--ink); background: linear-gradient(180deg, var(--bg-top), var(--bg-bottom)); min-height: 100vh; }
   .wrap { max-width: var(--max-w); margin: 0 auto; padding: 28px 16px 48px; display: flex; flex-direction: column; gap: 16px; }
-  h1 { text-align: center; font-size: 28px; font-weight: 800; }
-  /* 絵文字までグラデーションで塗られないよう、文字部分だけに掛ける */
-  h1 .grad { background: linear-gradient(90deg, var(--boy-deep), var(--girl-deep)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .sub { text-align: center; font-size: 16px; color: var(--ink-soft); line-height: 1.7; }
   /* 見出しの行（Q キットの ls-brand）は、名前が長いので少し小さく。ひとことはロゴのうす紫 */
   .ls-brand-name { font-size: 18px; }
   .ls-brand-icon { width: 28px; height: 28px; }
@@ -75,10 +71,6 @@
   .ls-label { font-size: 16px; color: var(--ink); }
   .ls-input { font-size: 17px; border-width: 2px; }
   textarea.ls-input { min-height: 80px; resize: vertical; }
-  /* 作り方の流れ */
-  .flow { display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 15px; font-weight: 700; }
-  .flow span { background: #fff; border-radius: 99px; padding: 6px 12px; box-shadow: 0 2px 6px rgba(0,0,0,.06); }
-  .flow i { font-style: normal; color: var(--ink-soft); }
   /* 性別・ふたりの性別の選び方（ジェンダーリビールにしかない形） */
   .gender label { display: block; font-size: 16px; font-weight: 700; }
   .ls-fold-meta { white-space: nowrap; }
@@ -152,7 +144,6 @@
       --card: rgba(36, 31, 46, 0.92);
       --paper: #26212f;
     }
-    :root[data-ls-dark="auto"] .flow span,
     :root[data-ls-dark="auto"] .gender span,
     :root[data-ls-dark="auto"] .url,
     :root[data-ls-dark="auto"] .example-text { background: var(--paper); }
@@ -169,13 +160,10 @@
 <main class="wrap">
   <!-- 見出しの行：アイコン＋名前（左）と横長のロゴ（右）。ほかのツール（さくせん盤・キロっく・ひっくり）と同じ形 -->
   <div class="ls-brand">
-    <p class="ls-brand-name"><img class="ls-brand-icon" src="icon.svg" alt="" width="28" height="28">ジェンダーリビール</p>
+    <h1 class="ls-brand-name"><img class="ls-brand-icon" src="icon.svg" alt="" width="28" height="28">ジェンダーリビール</h1>
     <img class="ls-brand-logo" src="logo.svg" alt="BabyQ" width="75" height="28">
   </div>
   <p class="ls-brand-copy">赤ちゃんの秘密を、みんなの喜びに</p>
-  <h1>🎁 <span class="grad">発表ページを作る</span></h1>
-  <p class="sub">性別を選ぶだけで、発表ページができます。<br>プレゼントを開けるまで、性別はヒミツ🎁</p>
-  <div class="flow" aria-label="作り方"><span>① 入力</span><i>›</i><span>② 作る</span><i>›</i><span>③ LINEで送る</span></div>
 
   <form class="ls-panel" id="form" autocomplete="off" novalidate>
     <div class="ls-field field" id="fGender">
@@ -186,7 +174,7 @@
         <label><input type="radio" name="gender" value="twins"><span>👶👶 双子</span></label>
         <label><input type="radio" name="gender" value="custom"><span>✏️ 自由に書く</span></label>
       </div>
-      <p class="err-msg">性別を選んでください</p>
+      <p class="err-msg">性別を選んでね</p>
     </div>
     <div class="ls-field field" id="twinsBox">
       <label class="ls-label">ふたりの性別</label>
@@ -196,7 +184,7 @@
         <label><input type="radio" name="twins" value="twins-mixed"><span><b class="em">👦💙👧🩷</b>男の子と女の子</span></label>
         <label><input type="radio" name="twins" value="twins"><span><b class="em">👶👶</b>性別はナイショ</span></label>
       </div>
-      <p class="err-msg">ふたりの性別を選んでください</p>
+      <p class="err-msg">ふたりの性別を選んでね</p>
     </div>
     <div id="customBox" class="row">
       <div class="ls-field"><label class="ls-label">絵文字</label><input class="ls-input" name="emoji" placeholder="👦👧"></div>
@@ -244,22 +232,22 @@
   <section class="ls-panel out" id="out">
     <p class="ls-panel-title">🎉 できました！ LINEで送りましょう</p>
     <a class="btn line" id="lineFlex" target="_blank" rel="noopener">💌 カードで送る（おすすめ）</a>
-    <p class="note" id="lenWarn" style="display:none;color:var(--girl-deep)">URLが長すぎて、LINEのカードのボタンに入らないかもしれません。メッセージを短くしてください。</p>
+    <p class="note" id="lenWarn" style="display:none;color:var(--girl-deep)">URLが長すぎて、LINEのカードのボタンに入らないかもしれません。メッセージを短くしてね。</p>
 
     <div class="out-block">
       <span class="out-label">リンクだけ送るときは</span>
       <div class="url" id="url"></div>
-      <button class="ls-button is-block" id="copy" type="button">リンクをコピー</button>
+      <button class="ls-button is-block" id="copy" type="button">🔗 リンクをコピー</button>
       <details class="example">
         <summary>✉️ 自分で送るときの例文</summary>
         <p class="example-text" id="exampleText"></p>
-        <button class="ls-button is-block" id="exampleCopy" type="button">この例文をコピー</button>
+        <button class="ls-button is-block" id="exampleCopy" type="button">📋 この例文をコピー</button>
       </details>
     </div>
 
     <div class="out-block">
       <span class="out-label">送る前に確かめたいときは</span>
-      <a class="ls-button is-block" id="open" target="_blank" rel="noopener">開いてみる</a>
+      <a class="ls-button is-block" id="open" target="_blank" rel="noopener">👀 開いてみる</a>
       <p class="note">⚠️ 発表まで進むと、答えが見えてしまいます。見た目だけ確かめたいときは、発表してよい日時を先の日付にしてから開くのがおすすめです。</p>
     </div>
   </section>
@@ -440,7 +428,6 @@
     $("open").href = url.href;
     $("lineFlex").href = buildFlexUrl(url.href, pub, !!(fd.get("pass") || "").trim());
     $("exampleText").textContent = buildExample(url.href, !!(fd.get("pass") || "").trim(), pub.reveal);
-    $("exampleCopy").textContent = "この例文をコピー";
     $("lenWarn").style.display = url.href.length > LINE_URI_MAX ? "block" : "none";
     $("out").classList.add("show");
     $("out").scrollIntoView({ behavior: "smooth" });
@@ -467,14 +454,23 @@
   // 例文は画面に全文出しているので、そのままコピー
   $("exampleCopy").onclick = async () => {
     const text = $("exampleText").textContent;
-    try { await navigator.clipboard.writeText(text); $("exampleCopy").textContent = "コピーしました！"; }
-    catch { LineShareUI.ask({ title: "長押ししてコピーしてください", input: text, readonly: true, ok: "閉じる", cancel: null }); }
+    try { await navigator.clipboard.writeText(text); LineShareUI.toast("📋 例文をコピーしました"); }
+    catch { LineShareUI.ask({ title: "長押ししてコピーしてね", input: text, readonly: true, ok: "閉じる", cancel: null }); }
   };
+
+  // はじめての人にだけ、使い方を3つ（Q キットの ui.js は defer なので、読み終わってから）
+  document.addEventListener("DOMContentLoaded", () => {
+    LineShareUI.firstTip(
+      "babyq",
+      ["性別を選んで「🎁 発表ページを作る」を押します", "合言葉を入れると、知っている人だけが答えを見られます", "「💌 カードで送る」で LINE へ。プレゼントを開けるまで性別はヒミツ"],
+      form
+    );
+  });
 
   // ボタン名どおりリンクだけをコピー(見えない文を混ぜない)
   $("copy").onclick = async () => {
-    try { await navigator.clipboard.writeText($("url").textContent); $("copy").textContent = "コピーしました！"; }
-    catch { LineShareUI.ask({ title: "長押ししてコピーしてください", input: $("url").textContent, readonly: true, ok: "閉じる", cancel: null }); }
+    try { await navigator.clipboard.writeText($("url").textContent); LineShareUI.toast("🔗 リンクをコピーしました"); }
+    catch { LineShareUI.ask({ title: "長押ししてコピーしてね", input: $("url").textContent, readonly: true, ok: "閉じる", cancel: null }); }
   };
 })();
 </script>

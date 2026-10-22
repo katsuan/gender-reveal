@@ -1100,7 +1100,7 @@
     if (soundOn()) audio().resume?.(); // iOS 対策: ユーザー操作で解禁
     if (P.secret) {
       if (needsPass) { openPass(); return; }
-      try { await decryptSecret(); } catch (e) { LineShareUI.ask({ title: "データを読み込めませんでした", text: "URLを確認してください。", ok: "OK", cancel: null }); return; }
+      try { await decryptSecret(); } catch (e) { LineShareUI.ask({ title: "発表を開けませんでした", text: "リンクが途中で切れていないか、見てみてね。", ok: "閉じる", cancel: null }); return; }
     }
     stage.style.background = "";
     resetStage();
@@ -1179,7 +1179,7 @@
   $("exampleCopy").onclick = async () => {
     const text = $("exampleText").textContent;
     try { await navigator.clipboard.writeText(text); $("exampleCopy").textContent = "コピーしました！"; }
-    catch (_) { LineShareUI.ask({ title: "長押ししてコピーしてください", input: text, readonly: true, ok: "閉じる", cancel: null }); }
+    catch (_) { LineShareUI.ask({ title: "長押ししてコピーしてね", input: text, readonly: true, ok: "閉じる", cancel: null }); }
   };
   // ボタン名どおりリンクだけをコピー(見えない文を混ぜない)
   /* ============ 画像で保存 ============ */
@@ -1263,7 +1263,7 @@
 
   $("shareBtn").onclick = async () => {
     try { await navigator.clipboard.writeText(SHARE_URL); $("shareBtn").textContent = "コピーしました！"; }
-    catch (_) { LineShareUI.ask({ title: "長押ししてコピーしてください", input: SHARE_URL, readonly: true, ok: "閉じる", cancel: null }); }
+    catch (_) { LineShareUI.ask({ title: "長押ししてコピーしてね", input: SHARE_URL, readonly: true, ok: "閉じる", cancel: null }); }
   };
   // ステージ外(結果画面)でESCで閉じる
   addEventListener("keydown", e => { if (e.key === "Escape" && !busy) stage.className = "stage"; });
