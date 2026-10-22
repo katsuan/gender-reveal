@@ -23,6 +23,8 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+<!-- Q キット（おくるんの共通部品）。色と字は下の :root で、ジェンダーリビールの色に -->
+<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css">
 <style>
   :root {
     --boy: #5aa9e6;
@@ -42,6 +44,16 @@
     --radius-md: 12px;
     --max-w: 480px;
     --font: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", system-ui, sans-serif;
+
+    /* Q キットの色と字を、ジェンダーリビールの色（ロゴのうす紫）と丸ゴシックに */
+    --ls-accent: #9b7fd1;
+    --ls-accent-strong: #8167b8;
+    --ls-accent-soft: #f3ecff;
+    --ls-accent-ink: #6a4fa3;
+    --ls-text: var(--ink);
+    --ls-subtext: var(--ink-soft);
+    --ls-line: var(--line);
+    --ls-font: var(--font);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   /* iPhone・LINE の中のブラウザで、キーボードが出て画面がずれたとき、ページの外（黒）が見えないよう、ページそのものにも背景の色 */
@@ -52,25 +64,22 @@
   /* 絵文字までグラデーションで塗られないよう、文字部分だけに掛ける */
   h1 .grad { background: linear-gradient(90deg, var(--boy-deep), var(--girl-deep)); -webkit-background-clip: text; background-clip: text; color: transparent; }
   .sub { text-align: center; font-size: 16px; color: var(--ink-soft); line-height: 1.7; }
-  /* 見出しの行：アイコン＋名前（左）と横長のロゴ（右） */
-  .brand { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
-  .brand-logo { display: block; flex: 0 0 auto; width: auto; height: 28px; }
-  /* キャッチコピー（見出しの行のすぐ下） */
-  .brand-copy { margin: 0 0 12px; color: #9B7FD1; font-size: 13px; font-weight: 800; line-height: 1.4; letter-spacing: 0.02em; }
-  .brand-icon { display: block; flex: 0 0 auto; width: 28px; height: 28px; }
-  .brand-name { display: flex; align-items: center; gap: 8px; min-width: 0; margin: 0; font-size: 18px; font-weight: 800; color: var(--ink); white-space: nowrap; }
+  /* 見出しの行（Q キットの ls-brand）は、名前が長いので少し小さく。ひとことはロゴのうす紫 */
+  .ls-brand-name { font-size: 18px; }
+  .ls-brand-icon { width: 28px; height: 28px; }
+  .ls-brand-copy { margin: 0 0 4px; color: var(--ls-accent); font-size: 13px; letter-spacing: 0.02em; }
+  .ls-panel { gap: 16px; padding: 20px; }
+  /* ラベルと入力は、年配の方にも読みやすいよう Q キットより大きめ */
+  .ls-label { font-size: 16px; color: var(--ink); }
+  .ls-input { font-size: 17px; border-width: 2px; }
+  textarea.ls-input { min-height: 80px; resize: vertical; }
   /* 作り方の流れ */
   .flow { display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 15px; font-weight: 700; }
   .flow span { background: #fff; border-radius: 99px; padding: 6px 12px; box-shadow: 0 2px 6px rgba(0,0,0,.06); }
   .flow i { font-style: normal; color: var(--ink-soft); }
-  .card { background: var(--card); border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: 20px; display: flex; flex-direction: column; gap: 14px; }
-  label { font-size: 16px; font-weight: 700; display: block; margin-bottom: 6px; }
+  /* 性別・ふたりの性別の選び方（ジェンダーリビールにしかない形） */
+  .gender label { display: block; font-size: 16px; font-weight: 700; }
   .opt { font-weight: 400; color: var(--ink-soft); font-size: 13px; white-space: nowrap; margin-left: 4px; }
-  input, textarea, select {
-    width: 100%; font-family: inherit; font-size: 17px; padding: 12px; border-radius: var(--radius-md);
-    border: 2px solid var(--line); background: #fff; color: var(--ink);
-  }
-  textarea { min-height: 80px; resize: vertical; }
   /* iOS Safari の日付入力は固有の最小幅を持つためリセットしてはみ出しを防ぐ */
   input[type=date], input[type=datetime-local] {
     -webkit-appearance: none; appearance: none; display: block;
@@ -79,7 +88,6 @@
   input::-webkit-date-and-time-value { text-align: left; margin: 0; }
   .row > * { min-width: 0; }
   .gender { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-  .gender label { margin: 0; }
   .gender input { display: none; }
   .gender span {
     display: block; text-align: center; padding: 16px 6px; font-size: 17px; border-radius: var(--radius-md); border: 2px solid var(--line);
@@ -95,9 +103,9 @@
     border: none; border-radius: 99px; padding: 18px 16px; font-family: inherit; font-size: 18px; font-weight: 800; color: #fff; cursor: pointer;
     background: linear-gradient(90deg, var(--boy), var(--girl)); box-shadow: 0 8px 20px rgba(200, 120, 180, .3);
   }
-  .btn.ghost { background: #fff; color: var(--girl-deep); box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+  .ls-button { min-height: 48px; font-size: 16px; }
   .out { display: none; }
-  .out.show { display: flex; }
+  .out.show { display: grid; }
   .url { font-size: 13px; word-break: break-all; background: #fff; border: 1px dashed var(--line); border-radius: var(--radius-md); padding: 12px; color: var(--ink-soft); }
   #exampleCopy { width: 100%; }
   .note { font-size: 14px; color: var(--ink-soft); line-height: 1.7; }
@@ -106,15 +114,6 @@
   .field.err .err-msg { display: block; }
   .field.err input[type=date] { border-color: var(--girl-deep); background: #fff5f8; }
   .field.err .gender span { border-color: #f2b3c7; }
-  .acc { border: 1px solid var(--line); border-radius: var(--radius-md); background: #fff; }
-  .acc summary {
-    list-style: none; cursor: pointer; padding: 16px 14px; font-size: 16px; font-weight: 700;
-    display: flex; align-items: center; gap: 6px;
-  }
-  .acc summary::-webkit-details-marker { display: none; }
-  .acc summary::after { content: "›"; margin-left: auto; font-size: 20px; color: var(--ink-soft); transition: transform .2s; }
-  .acc[open] summary::after { transform: rotate(90deg); }
-  .acc-body { padding: 0 14px 16px; display: flex; flex-direction: column; gap: 14px; }
   #customBox, #twinsBox { display: none; }
   /* 色: 共通の余白で見本がつぶれないよう大きな四角にし、横に発表の見え方を出す */
   #customBox .color-field { grid-column: 1 / -1; }
@@ -133,6 +132,7 @@
   .out-block { display: grid; gap: 8px; border-top: 1px dashed var(--line); padding-top: 14px; }
   .out-label { font-size: 15px; font-weight: 700; color: var(--ink-soft); }
   .btn.line { background: var(--line-green); box-shadow: 0 6px 16px rgba(6, 199, 85, .25); text-align: center; text-decoration: none; }
+  .btn { text-align: center; }
   .gender input[name="twins"]:checked + span { border-color: var(--gold); background: #fffaeb; }
   a { color: var(--girl-deep); }
 </style>
@@ -140,18 +140,18 @@
 <body>
 <main class="wrap">
   <!-- 見出しの行：アイコン＋名前（左）と横長のロゴ（右）。ほかのツール（さくせん盤・キロっく・ひっくり）と同じ形 -->
-  <div class="brand">
-    <p class="brand-name"><img class="brand-icon" src="icon.svg" alt="" width="28" height="28">ジェンダーリビール</p>
-    <img class="brand-logo" src="logo.svg" alt="BabyQ" width="75" height="28">
+  <div class="ls-brand">
+    <p class="ls-brand-name"><img class="ls-brand-icon" src="icon.svg" alt="" width="28" height="28">ジェンダーリビール</p>
+    <img class="ls-brand-logo" src="logo.svg" alt="BabyQ" width="75" height="28">
   </div>
-  <p class="brand-copy">赤ちゃんの秘密を、みんなの喜びに</p>
+  <p class="ls-brand-copy">赤ちゃんの秘密を、みんなの喜びに</p>
   <h1>🎁 <span class="grad">発表ページを作る</span></h1>
   <p class="sub">赤ちゃんの性別を選ぶだけで、<br>家族に送れる発表ページができます。<br>受け取った人がプレゼントを開けるまで、<br>性別はヒミツのままです🎁</p>
   <div class="flow" aria-label="作り方"><span>① 入力</span><i>›</i><span>② 作る</span><i>›</i><span>③ LINEで送る</span></div>
 
-  <form class="card" id="form" autocomplete="off" novalidate>
-    <div class="field" id="fGender">
-      <label>性別<span class="req">必須</span></label>
+  <form class="ls-panel" id="form" autocomplete="off" novalidate>
+    <div class="ls-field field" id="fGender">
+      <label class="ls-label">性別<span class="req">必須</span></label>
       <div class="gender">
         <label><input type="radio" name="gender" value="boy"><span>👦💙 男の子</span></label>
         <label><input type="radio" name="gender" value="girl"><span>👧🩷 女の子</span></label>
@@ -160,8 +160,8 @@
       </div>
       <p class="err-msg">性別を選んでください</p>
     </div>
-    <div class="field" id="twinsBox">
-      <label>ふたりの性別</label>
+    <div class="ls-field field" id="twinsBox">
+      <label class="ls-label">ふたりの性別</label>
       <div class="gender">
         <label><input type="radio" name="twins" value="twins-boys"><span><b class="em">👦👦💙</b>男の子ふたり</span></label>
         <label><input type="radio" name="twins" value="twins-girls"><span><b class="em">👧👧🩷</b>女の子ふたり</span></label>
@@ -171,41 +171,41 @@
       <p class="err-msg">ふたりの性別を選んでください</p>
     </div>
     <div id="customBox" class="row">
-      <div><label>絵文字</label><input name="emoji" placeholder="👦👧"></div>
-      <div><label>発表する言葉</label><input name="label" placeholder="男の子と女の子！"></div>
+      <div class="ls-field"><label class="ls-label">絵文字</label><input class="ls-input" name="emoji" placeholder="👦👧"></div>
+      <div class="ls-field"><label class="ls-label">発表する言葉</label><input class="ls-input" name="label" placeholder="男の子と女の子！"></div>
       <div class="color-field">
-        <label>色<span class="opt">四角を押して選ぶ</span></label>
+        <label class="ls-label">色<span class="opt">四角を押して選ぶ</span></label>
         <div class="color-pick">
           <input name="color" type="color" value="#f5c542" aria-label="発表の色">
           <span class="color-preview" id="colorPreview"></span>
         </div>
       </div>
     </div>
-    <div class="field" id="fDue">
-      <label>出産予定日<span class="opt">なくてもOK</span></label>
-      <input name="due" type="date">
+    <div class="ls-field field" id="fDue">
+      <label class="ls-label">出産予定日<span class="opt">なくてもOK</span></label>
+      <input class="ls-input" name="due" type="date">
       <p class="note" style="margin-top:6px">入れると「あと○日」とカレンダーが出ます。</p>
     </div>
 
-    <details class="acc">
-      <summary><span>✨ 名前・メッセージ</span><span class="opt">なくてもOK</span></summary>
-      <div class="acc-body">
+    <details class="ls-fold">
+      <summary><span class="ls-fold-icon" aria-hidden="true">✨</span>名前・メッセージ <span class="ls-fold-meta">なくてもOK</span></summary>
+      <div class="ls-fold-body">
         <div class="row">
-          <div><label>パパ</label><input name="dad" placeholder="太郎"></div>
-          <div><label>ママ</label><input name="mom" placeholder="花子"></div>
+          <div class="ls-field"><label class="ls-label">パパ</label><input class="ls-input" name="dad" placeholder="太郎"></div>
+          <div class="ls-field"><label class="ls-label">ママ</label><input class="ls-input" name="mom" placeholder="花子"></div>
         </div>
-        <div><label>赤ちゃんの名前・愛称</label><input name="name" placeholder="べびちゃん"></div>
-        <div><label>ページのタイトル</label><input name="title" placeholder="ベビーの性別発表"></div>
-        <div><label>発表後のメッセージ</label><textarea name="msg" placeholder="元気に生まれてきてね！"></textarea></div>
+        <div class="ls-field"><label class="ls-label">赤ちゃんの名前・愛称</label><input class="ls-input" name="name" placeholder="べびちゃん"></div>
+        <div class="ls-field"><label class="ls-label">ページのタイトル</label><input class="ls-input" name="title" placeholder="ベビーの性別発表"></div>
+        <div class="ls-field"><label class="ls-label">発表後のメッセージ</label><textarea class="ls-input" name="msg" placeholder="元気に生まれてきてね！"></textarea></div>
       </div>
     </details>
 
-    <details class="acc">
-      <summary><span>🔒 合言葉・発表日時</span><span class="opt">なくてもOK</span></summary>
-      <div class="acc-body">
-        <div><label>合言葉<span class="opt">おすすめ</span></label><input name="pass" placeholder="例: ひよこ"><p class="note" style="margin-top:6px">合言葉を知っている人だけが答えを見られます。合言葉はURLとは別に、LINEや電話で伝えてね。</p></div>
-        <div><label>発表してよい日時</label><input name="reveal" type="datetime-local"><p class="note" style="margin-top:6px">この日時になるまで、発表ボタンは押せません。みんなで同時に見たいときに。</p></div>
-        <div><label>プレゼントを開けるまでのタップ回数</label><select name="taps"><option value="1">1回</option><option value="3">3回</option><option value="5" selected>5回（標準）</option><option value="7">7回</option><option value="10">10回</option><option value="15">15回</option><option value="20">20回</option></select><p class="note" style="margin-top:6px">多いほどドキドキが長くなります。おじいちゃん・おばあちゃんには3〜5回がおすすめ。</p></div>
+    <details class="ls-fold">
+      <summary><span class="ls-fold-icon" aria-hidden="true">🔒</span>合言葉・発表日時 <span class="ls-fold-meta">なくてもOK</span></summary>
+      <div class="ls-fold-body">
+        <div class="ls-field"><label class="ls-label">合言葉<span class="opt">おすすめ</span></label><input class="ls-input" name="pass" placeholder="例: ひよこ"><p class="note" style="margin-top:6px">合言葉を知っている人だけが答えを見られます。合言葉はURLとは別に、LINEや電話で伝えてね。</p></div>
+        <div class="ls-field"><label class="ls-label">発表してよい日時</label><input class="ls-input" name="reveal" type="datetime-local"><p class="note" style="margin-top:6px">この日時になるまで、発表ボタンは押せません。みんなで同時に見たいときに。</p></div>
+        <div class="ls-field"><label class="ls-label">プレゼントを開けるまでのタップ回数</label><select class="ls-input" name="taps"><option value="1">1回</option><option value="3">3回</option><option value="5" selected>5回（標準）</option><option value="7">7回</option><option value="10">10回</option><option value="15">15回</option><option value="20">20回</option></select><p class="note" style="margin-top:6px">多いほどドキドキが長くなります。おじいちゃん・おばあちゃんには3〜5回がおすすめ。</p></div>
       </div>
     </details>
 
@@ -213,25 +213,25 @@
   </form>
 
   <!-- 作ったあと：送る操作を先頭に、答えが見えてしまう「開いてみる」は最後に置く -->
-  <section class="card out" id="out">
-    <label>🎉 できました！ LINEで送りましょう</label>
+  <section class="ls-panel out" id="out">
+    <p class="ls-panel-title">🎉 できました！ LINEで送りましょう</p>
     <a class="btn line" id="lineFlex" target="_blank" rel="noopener">💌 カードで送る（おすすめ）</a>
     <p class="note" id="lenWarn" style="display:none;color:var(--girl-deep)">URLが長すぎて、LINEのカードのボタンに入らないかもしれません。メッセージを短くしてください。</p>
 
     <div class="out-block">
       <span class="out-label">リンクだけ送るときは</span>
       <div class="url" id="url"></div>
-      <button class="btn ghost" id="copy" type="button">リンクをコピー</button>
+      <button class="ls-button is-block" id="copy" type="button">リンクをコピー</button>
       <details class="example">
         <summary>✉️ 自分で送るときの例文</summary>
         <p class="example-text" id="exampleText"></p>
-        <button class="btn ghost" id="exampleCopy" type="button">この例文をコピー</button>
+        <button class="ls-button is-block" id="exampleCopy" type="button">この例文をコピー</button>
       </details>
     </div>
 
     <div class="out-block">
       <span class="out-label">送る前に確かめたいときは</span>
-      <a class="btn ghost" id="open" target="_blank" rel="noopener" style="text-align:center;text-decoration:none">開いてみる</a>
+      <a class="ls-button is-block" id="open" target="_blank" rel="noopener">開いてみる</a>
       <p class="note">⚠️ 発表まで進むと、答えが見えてしまいます。見た目だけ確かめたいときは、発表してよい日時を先の日付にしてから開くのがおすすめです。</p>
     </div>
   </section>
