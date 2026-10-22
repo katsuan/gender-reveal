@@ -485,6 +485,7 @@
 
 <!-- おくるんのカードの入口（LIFF ID とカードの URL は line-share の shared/oqrn.js に1か所） -->
 <script src="https://katsuan.github.io/line-share/shared/oqrn.js"></script>
+<script src="params.js?v=202610222222"></script>
 <script>
 (() => {
   "use strict";
@@ -502,86 +503,8 @@
     twins:          { lead: "なんと…",           label: "双子ちゃん！",   emoji: "👶👶",   color: "--gold", deep: "--gold-deep" },
     surprise:       { lead: "それは…",           label: "ヒミツ！",       emoji: "🤫✨",   color: "--gold", deep: "--gold-deep" },
   };
-  const ALIASES = { m: "boy", male: "boy", 男: "boy", 男の子: "boy", f: "girl", female: "girl", 女: "girl", 女の子: "girl" };
-
-  /* ============ パラメータ読み込み ============ */
-  // 平文: ?gender=girl&due=2027-02-14&reveal=2026-10-01T19:00&mom=花子&dad=太郎&name=ひな&msg=...
-  // 公開情報: ?d=<base64url(JSON)>  予定日・名前など
-  // 秘密情報: ?s=<AES-GCM暗号文>  性別・赤ちゃんの名前・メッセージ (create.html で生成)
-  function b64urlDecode(str) {
-    const b64 = str.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((str.length + 3) % 4);
-    const bin = atob(b64);
-    const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
-    return new TextDecoder().decode(bytes);
-  }
-  /* ============ URL形式 ============
-   * v3(現行): #<base64url>  詰めたバイナリ形式。詳細は create.html の buildTokenV3 と下の readV3
-   * v2(旧)  : ?p=<base64url>  1パラメータにまとめた短縮形式
-   *   bytes = [2][flags][pubLen 2byte][pub JSON(短縮キー)][salt 8][iv 12][暗号文+tag][key 12 ※flags&1 のとき]
-   *   pub  : u=予定日YYYYMMDD r=解禁YYYYMMDDHHmm f=パパ m=ママ t=タイトル k=タップ回数
-   *   秘密 : g=性別コード(1文字) n=名前 s=メッセージ l/e/c=カスタム表示
-   * v1(旧) : ?d=<公開JSON>&s=v1.<salt>.<iv>.<ct>[.<key>]  互換のため読み込み可
-   */
-  const b64urlToBytes = s => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), c => c.charCodeAt(0));
-  const bytesToB64url = bytes => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  const CODE_TO_GENDER = { b: "boy", g: "girl", B: "twins-boys", G: "twins-girls", M: "twins-mixed", T: "twins", c: "custom" };
-  const PUB_KEYS = { u: "due", r: "reveal", f: "dad", m: "mom", t: "title", k: "taps" };
-  const SECRET_KEYS = { g: "gender", n: "name", s: "msg", l: "label", e: "emoji", c: "color" };
-  const expandDate = v => v && v.length >= 8 ? `${v.slice(0, 4)}-${v.slice(4, 6)}-${v.slice(6, 8)}` + (v.length >= 12 ? `T${v.slice(8, 10)}:${v.slice(10, 12)}` : "") : v;
-
-  function readV2(token, p) {
-    const bytes = b64urlToBytes(token);
-    if (bytes[0] !== 2) throw new Error("unsupported");
-    const hasKey = bytes[1] & 1;
-    const pubLen = (bytes[2] << 8) | bytes[3];
-    let i = 4;
-    const pub = pubLen ? JSON.parse(new TextDecoder().decode(bytes.slice(i, i + pubLen))) : {};
-    i += pubLen;
-    for (const [k, v] of Object.entries(pub)) if (PUB_KEYS[k]) p[PUB_KEYS[k]] = String(v);
-    p.due = expandDate(p.due); p.reveal = expandDate(p.reveal);
-    const salt = bytes.slice(i, i + 8), iv = bytes.slice(i + 8, i + 20);
-    const end = hasKey ? bytes.length - 12 : bytes.length;
-    p.secret = { v: 2, salt, iv, ct: bytes.slice(i + 20, end), key: hasKey ? bytesToB64url(bytes.slice(end)) : null };
-  }
-
-  // v3: [0x30|合言葉あり][項目マスク][公開項目…][salt 8 ※合言葉あり][暗号文+tag 12][鍵 12 ※合言葉なし]
-  const V3_EPOCH = Date.UTC(2020, 0, 1);
-  const V3_GENDERS = ["boy", "girl", "twins-boys", "twins-girls", "twins-mixed", "twins", "custom"];
-  function v3Reader(bytes, i = 0) {
-    const r = {
-      get pos() { return i; },
-      byte: () => bytes[i++],
-      varint() { let n = 0, shift = 0, b; do { b = bytes[i++]; n |= (b & 127) << shift; shift += 7; } while (b & 128); return n; },
-      str() { const len = r.varint(); const v = new TextDecoder().decode(bytes.slice(i, i + len)); i += len; return v; },
-    };
-    return r;
-  }
-  function readV3(token, p) {
-    const bytes = b64urlToBytes(token);
-    if (bytes[0] >> 4 !== 3) throw new Error("unsupported");
-    const hasPass = bytes[0] & 1, mask = bytes[1];
-    const r = v3Reader(bytes, 2);
-    const iso = ms => new Date(ms).toISOString(); // 壁時計の時刻をそのまま UTC として持っているので toISOString で戻せる
-    if (mask & 1) { const days = (r.byte() << 8) | r.byte(); p.due = iso(V3_EPOCH + days * 864e5).slice(0, 10); }
-    if (mask & 2) { const mins = (r.byte() << 16) | (r.byte() << 8) | r.byte(); p.reveal = iso(V3_EPOCH + mins * 6e4).slice(0, 16); }
-    if (mask & 4) p.taps = String(r.byte());
-    if (mask & 8) p.dad = r.str();
-    if (mask & 16) p.mom = r.str();
-    if (mask & 32) p.title = r.str();
-    let i = r.pos;
-    const salt = hasPass ? bytes.slice(i, i += 8) : null;
-    const end = hasPass ? bytes.length : bytes.length - 12;
-    p.secret = { v: 3, salt, ct: bytes.slice(i, end), key: hasPass ? null : bytes.slice(end) };
-  }
-  function readV3Secret(plain) {
-    const r = v3Reader(plain), head = r.byte(), out = { gender: V3_GENDERS[head & 7] };
-    if (head & 8) out.name = r.str();
-    if (head & 16) out.msg = r.str();
-    if (head & 32) out.label = r.str();
-    if (head & 64) out.emoji = r.str();
-    if (head & 128) out.color = "#" + [r.byte(), r.byte(), r.byte()].map(b => b.toString(16).padStart(2, "0")).join("");
-    return out;
-  }
+  // URL の中身を読む部分は params.js（RevealParams）
+  const R = window.RevealParams;
 
   /* ============ URLの見た目を短くする ============
    * 開いた直後にアドレスバーから ?p=... や #... を消す(見た目のため)。
@@ -603,36 +526,9 @@
   // 開いたままのタブで別の #リンク を開くと再読み込みされず前の中身のままになるので、読み直す
   addEventListener("hashchange", () => { if (location.hash) location.reload(); });
 
-  function readParams() {
-    let p = {};
-    if (SEARCH.startsWith("#")) {
-      try { readV3(SEARCH.slice(1), p); } catch (e) { console.warn("# の解析に失敗", e); }
-      normalizeGender(p);
-      return p;
-    }
-    const q = new URLSearchParams(SEARCH);
-    if (q.get("p")) {
-      try { readV2(q.get("p"), p); } catch (e) { console.warn("p の解析に失敗", e); }
-    } else {
-      if (q.get("d")) {
-        try { p = JSON.parse(b64urlDecode(q.get("d"))); } catch (e) { console.warn("d の解析に失敗", e); }
-      }
-      const s = q.get("s");
-      if (s) {
-        const [ver, salt, iv, ct, key] = s.split(".");
-        if (ver === "v1") p.secret = { v: 1, salt: b64urlToBytes(salt), iv: b64urlToBytes(iv), ct: b64urlToBytes(ct), key: key || null };
-      }
-    }
-    for (const [k, v] of q.entries()) if (!["p", "d", "s"].includes(k) && !(k in p)) p[k] = v;
-    normalizeGender(p);
-    return p;
-  }
-  function normalizeGender(p) {
-    const g = String(p.gender || p.g || "").trim().toLowerCase();
-    p.gender = GENDERS[g] ? g : (ALIASES[g] || null);
-    if (!p.gender && (g === "custom" || (g && p.label))) p.gender = "custom"; // カスタム
-  }
-  const P = readParams();
+  // 名前や予定日が入ったページは、検索に出さない
+  if (SEARCH) document.head.append(Object.assign(document.createElement("meta"), { name: "robots", content: "noindex" }));
+  const P = R.readParams(SEARCH);
   // タップ回数(?taps=) 1〜20、未指定は5
   const TAPS_TO_OPEN = Math.min(MAX_TAPS, Math.max(1, parseInt(P.taps, 10) || DEFAULT_TAPS));
 
@@ -652,9 +548,7 @@
           base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
       }
       const plain = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: new Uint8Array(12), tagLength: 96 }, aes, ct));
-      Object.assign(P, readV3Secret(plain));
-      normalizeGender(P);
-      P.secret = null;
+      R.applySecret(P, R.readV3Secret(plain), 3);
       return;
     }
     const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(key || pass), "PBKDF2", false, ["deriveKey"]);
@@ -662,16 +556,7 @@
       { name: "PBKDF2", salt, iterations: 150000, hash: "SHA-256" },
       base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
     const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, aes, ct);
-    const data = JSON.parse(new TextDecoder().decode(plain));
-    if (v === 2) {
-      for (const [k, val] of Object.entries(data)) if (SECRET_KEYS[k]) P[SECRET_KEYS[k]] = val;
-      P.gender = CODE_TO_GENDER[data.g] || null;
-    } else {
-      delete data.pad;
-      Object.assign(P, data);
-    }
-    normalizeGender(P);
-    P.secret = null;
+    R.applySecret(P, JSON.parse(new TextDecoder().decode(plain)), v);
   }
 
   function parseDate(s) {
@@ -716,7 +601,7 @@
   }
   function renderCountdown(el, target, doneText) {
     const p = diffParts(target);
-    if (p.done) { el.innerHTML = `<div class="cd-done">${doneText}</div>`; return true; }
+    if (p.done) { el.innerHTML = `<div class="cd-done">${doneText}</div>`; return true; } // qcheck-ok: W1 doneText は決まった文字だけ
     el.innerHTML = `<div class="countdown">
       <div class="cd-cell"><div class="cd-num">${p.d}</div><div class="cd-unit">日</div></div>
       <div class="cd-cell"><div class="cd-num">${pad(p.h)}</div><div class="cd-unit">時間</div></div>
@@ -776,6 +661,7 @@
     const locked = !!revealAt && revealAt > Date.now();
     if (locked) {
       btn.disabled = true;
+      // qcheck-ok: W1 日付から作った数字だけ
       $("revealLabel").innerHTML = `発表は<br><span class="nowrap">${fmtDateW(revealAt)} ${fmtTime(revealAt)}</span>から`;
       renderCountdown($("revealCountdown"), revealAt, "");
       $("revealCountdown").style.marginBottom = "16px";
@@ -973,7 +859,7 @@
     gift.className = "gift idle"; gift.style.display = "";
     gift.style.setProperty("--grow", 1);
     $("hint").textContent = "プレゼントを指で押してね";
-    $("remain").innerHTML = `あと <b>${TAPS_TO_OPEN}</b> 回`;
+    $("remain").innerHTML = `あと <b>${TAPS_TO_OPEN}</b> 回`; // qcheck-ok: W1 数字だけ
     $("remain").style.display = "";
     $("taps").style.display = "";
     $("taps").innerHTML = Array.from({ length: TAPS_TO_OPEN }, () => '<i class="tap-dot"></i>').join("");
