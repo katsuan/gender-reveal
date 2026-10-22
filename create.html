@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-ls-dark="auto">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -16,7 +16,8 @@
 <meta property="og:image:height" content="630">
 <meta property="og:locale" content="ja_JP">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#f3ecff">
+<meta name="theme-color" content="#f3ecff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16151a" media="(prefers-color-scheme: dark)">
 <!-- アイコン・ロゴ・作成ページの OGP は tools/icon.py で作る -->
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="icon" href="icon-32.png" type="image/png" sizes="32x32">
@@ -25,6 +26,7 @@
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
 <!-- Q キット（おくるんの共通部品）。色と字は下の :root で、ジェンダーリビールの色に -->
 <link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css">
+<script src="https://katsuan.github.io/line-share/shared/ui.js" defer></script>
 <style>
   :root {
     --boy: #5aa9e6;
@@ -79,6 +81,7 @@
   .flow i { font-style: normal; color: var(--ink-soft); }
   /* 性別・ふたりの性別の選び方（ジェンダーリビールにしかない形） */
   .gender label { display: block; font-size: 16px; font-weight: 700; }
+  .ls-fold-meta { white-space: nowrap; }
   .opt { font-weight: 400; color: var(--ink-soft); font-size: 13px; white-space: nowrap; margin-left: 4px; }
   /* iOS Safari の日付入力は固有の最小幅を持つためリセットしてはみ出しを防ぐ */
   input[type=date], input[type=datetime-local] {
@@ -91,8 +94,10 @@
   .gender input { display: none; }
   .gender span {
     display: block; text-align: center; padding: 16px 6px; font-size: 17px; border-radius: var(--radius-md); border: 2px solid var(--line);
-    background: #fff; font-weight: 700; cursor: pointer; transition: .15s;
+    background: #fff; font-weight: 700; cursor: pointer; transition: .15s; white-space: nowrap;
   }
+  /* 幅の狭いスマホ（320px など）：「✏️ 自由に書く」が折れないよう、字を少し小さく */
+  @media (max-width: 349px) { .gender span { font-size: 15px; padding-inline: 4px; } }
   .gender input:checked + span { border-color: var(--girl); background: #fff2f7; }
   .gender input[value="boy"]:checked + span { border-color: var(--boy); background: #eef7ff; }
   .gender input[value="twins"]:checked + span, .gender input[value="custom"]:checked + span { border-color: var(--gold); background: #fffaeb; }
@@ -135,6 +140,29 @@
   .btn { text-align: center; }
   .gender input[name="twins"]:checked + span { border-color: var(--gold); background: #fffaeb; }
   a { color: var(--girl-deep); }
+
+  /* ---- 暗い表示（<html data-ls-dark="auto">。Q キットの色は ui.css が暗くする）。作るページだけ（受け取った人が見るページは明るいまま） ---- */
+  @media (prefers-color-scheme: dark) {
+    :root[data-ls-dark="auto"] {
+      --bg-top: #16131d;
+      --bg-bottom: #1d1726;
+      --ink: #eeeaf5;
+      --ink-soft: #b2a9c4;
+      --line: rgba(255, 255, 255, 0.14);
+      --card: rgba(36, 31, 46, 0.92);
+      --paper: #26212f;
+    }
+    :root[data-ls-dark="auto"] .flow span,
+    :root[data-ls-dark="auto"] .gender span,
+    :root[data-ls-dark="auto"] .url,
+    :root[data-ls-dark="auto"] .example-text { background: var(--paper); }
+    :root[data-ls-dark="auto"] .gender input:checked + span { background: #3a2230; }
+    :root[data-ls-dark="auto"] .gender input[value="boy"]:checked + span { background: #1d2e3d; }
+    :root[data-ls-dark="auto"] .gender input[value="twins"]:checked + span,
+    :root[data-ls-dark="auto"] .gender input[value="custom"]:checked + span,
+    :root[data-ls-dark="auto"] .gender input[name="twins"]:checked + span { background: #3a3220; }
+    :root[data-ls-dark="auto"] .field.err input[type=date] { background: #3a1d26; }
+  }
 </style>
 </head>
 <body>
@@ -146,7 +174,7 @@
   </div>
   <p class="ls-brand-copy">赤ちゃんの秘密を、みんなの喜びに</p>
   <h1>🎁 <span class="grad">発表ページを作る</span></h1>
-  <p class="sub">赤ちゃんの性別を選ぶだけで、<br>家族に送れる発表ページができます。<br>受け取った人がプレゼントを開けるまで、<br>性別はヒミツのままです🎁</p>
+  <p class="sub">性別を選ぶだけで、発表ページができます。<br>プレゼントを開けるまで、性別はヒミツ🎁</p>
   <div class="flow" aria-label="作り方"><span>① 入力</span><i>›</i><span>② 作る</span><i>›</i><span>③ LINEで送る</span></div>
 
   <form class="ls-panel" id="form" autocomplete="off" novalidate>
@@ -440,15 +468,17 @@
   $("exampleCopy").onclick = async () => {
     const text = $("exampleText").textContent;
     try { await navigator.clipboard.writeText(text); $("exampleCopy").textContent = "コピーしました！"; }
-    catch { prompt("長押ししてコピーしてください", text); }
+    catch { LineShareUI.ask({ title: "長押ししてコピーしてください", input: text, readonly: true, ok: "閉じる", cancel: null }); }
   };
 
   // ボタン名どおりリンクだけをコピー(見えない文を混ぜない)
   $("copy").onclick = async () => {
     try { await navigator.clipboard.writeText($("url").textContent); $("copy").textContent = "コピーしました！"; }
-    catch { prompt("長押ししてコピーしてください", $("url").textContent); }
+    catch { LineShareUI.ask({ title: "長押ししてコピーしてください", input: $("url").textContent, readonly: true, ok: "閉じる", cancel: null }); }
   };
 })();
 </script>
+<!-- 電波がなくても開けるように（sw.js） -->
+<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>
 </body>
 </html>

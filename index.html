@@ -23,6 +23,9 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+<!-- Q キット（確認の窓など。ページの見た目は下の CSS が上書きする） -->
+<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css">
+<script src="https://katsuan.github.io/line-share/shared/ui.js" defer></script>
 <style>
   /* ===== 色・サイズはここで一括管理 ===== */
   :root {
@@ -1097,7 +1100,7 @@
     if (soundOn()) audio().resume?.(); // iOS 対策: ユーザー操作で解禁
     if (P.secret) {
       if (needsPass) { openPass(); return; }
-      try { await decryptSecret(); } catch (e) { alert("データを読み込めませんでした。URLを確認してください"); return; }
+      try { await decryptSecret(); } catch (e) { LineShareUI.ask({ title: "データを読み込めませんでした", text: "URLを確認してください。", ok: "OK", cancel: null }); return; }
     }
     stage.style.background = "";
     resetStage();
@@ -1176,7 +1179,7 @@
   $("exampleCopy").onclick = async () => {
     const text = $("exampleText").textContent;
     try { await navigator.clipboard.writeText(text); $("exampleCopy").textContent = "コピーしました！"; }
-    catch (_) { prompt("長押ししてコピーしてください", text); }
+    catch (_) { LineShareUI.ask({ title: "長押ししてコピーしてください", input: text, readonly: true, ok: "閉じる", cancel: null }); }
   };
   // ボタン名どおりリンクだけをコピー(見えない文を混ぜない)
   /* ============ 画像で保存 ============ */
@@ -1260,7 +1263,7 @@
 
   $("shareBtn").onclick = async () => {
     try { await navigator.clipboard.writeText(SHARE_URL); $("shareBtn").textContent = "コピーしました！"; }
-    catch (_) { prompt("長押ししてコピーしてください", SHARE_URL); }
+    catch (_) { LineShareUI.ask({ title: "長押ししてコピーしてください", input: SHARE_URL, readonly: true, ok: "閉じる", cancel: null }); }
   };
   // ステージ外(結果画面)でESCで閉じる
   addEventListener("keydown", e => { if (e.key === "Escape" && !busy) stage.className = "stage"; });
@@ -1272,5 +1275,7 @@
   setInterval(tick, 1000);
 })();
 </script>
+<!-- 電波がなくても開けるように（sw.js） -->
+<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>
 </body>
 </html>
