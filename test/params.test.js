@@ -89,7 +89,7 @@ test("v3 の文字の長さがうそ（中身より長い）でも落ちない",
 });
 
 test("v1（?d=&s=）の古いリンクも、決まった項目だけ受けとる", () => {
-  const P = R.readParams("?d=" + b64(JSON.stringify({ due: "2027-01-01", mom: "花子", boyColor: "expression(alert(1))", extra: 1 })));
+  const P = R.readParams("?d=" + b64(JSON.stringify({ due: "2027-01-01", mom: "花子", boyColor: "expression(alert(1))", extra: 1 }))); // qcheck-ok: W8 外からの文字の見本
   assert.deepEqual(plainObj(P), { mom: "花子", due: "2027-01-01", gender: null });
 });
 
