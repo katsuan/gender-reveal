@@ -334,6 +334,8 @@
   }
   .pill.primary { background: var(--reveal); color: #fff; }
   .share-box { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 14px; animation: lateIn 1.2s ease both 4s; }
+  .pill.suqsuq-btn { display: inline-block; margin: 4px auto 0; background: #fff4ef; color: #c4583f; text-decoration: none; }
+  .pill.suqsuq-btn[hidden] { display: none; }
   .pill.line-btn { background: var(--line-green); color: #fff; text-decoration: none; font-size: 18px; padding: 16px 32px; box-shadow: 0 6px 16px rgba(6, 199, 85, .3); }
   /* 送るときの例文: 開くと全文が見え、そのままコピーできる */
   .example { width: 100%; max-width: 340px; text-align: center; }
@@ -461,6 +463,8 @@
         <button class="pill" id="exampleCopy" type="button">この例文をコピー</button>
       </details>
     </div>
+    <!-- すくすく（SuQSuQ）へ：出産予定日と名前を入れて「妊娠◯週」を写真に（予定日がまだ先のときだけ） -->
+    <a class="pill suqsuq-btn" id="suqsuqBtn" target="_blank" rel="noopener" hidden>🌱 すくすくで「妊娠◯週」を写真に</a>
     <div class="actions">
       <button class="pill" id="againBtn">🔁 もう一度見る</button>
       <button class="pill" id="replayBtn">最初の画面へ</button>
@@ -488,8 +492,8 @@
 
 <!-- おくるんのカードの入口（LIFF ID とカードの URL は line-share の shared/oqrn.js に1か所） -->
 <script src="https://katsuan.github.io/line-share/shared/oqrn.js"></script>
-<script src="params.js?v=202610230232"></script>
-<script src="calendar.js?v=202610230232"></script>
+<script src="params.js?v=202610231129"></script>
+<script src="calendar.js?v=202610231129"></script>
 <script>
 (() => {
   "use strict";
@@ -976,6 +980,13 @@
     $("resultDue").innerHTML = daysLeft > 0 ? `赤ちゃんに会えるまで あと<b>${daysLeft}</b>日`
       : daysLeft === 0 ? "今日が出産予定日です 👶" : "";
     $("result").classList.add("show");
+    // すくすくへ：予定日がまだ先なら、予定日と名前（発表のあとなので見せてよい）を渡す
+    if (due && daysLeft > 0) {
+      const q = new URLSearchParams({ due: P.due });
+      if (P.name) q.set("name", P.name);
+      $("suqsuqBtn").href = `https://katsuan.github.io/suqsuq/?${q}`;
+    }
+    $("suqsuqBtn").hidden = !(due && daysLeft > 0);
 
     const palette = /boy/.test(P.gender) ? [color, deep, "#ffffff", "#bfe3ff", cssVar("--gold")]
       : /girl/.test(P.gender) ? [color, deep, "#ffffff", "#ffd6e5", cssVar("--gold")]
