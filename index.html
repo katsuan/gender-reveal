@@ -155,7 +155,9 @@
   }
   .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
   .cal-dow { font-size: 14px; font-weight: 700; color: var(--ink-soft); padding: 4px 0; }
-  .cal-dow:first-child { color: var(--girl-deep); } .cal-dow:last-child { color: var(--boy-deep); }
+  .cal-dow.sun { color: var(--girl-deep); } .cal-dow.sat { color: var(--boy-deep); }
+  /* 週のはじまり（日曜・月曜）の切りかえ。カレンダーの下に小さく */
+  .cal-week { display: block; margin: 10px auto 0; font-family: inherit; font-size: 14px; color: var(--ink-soft); background: none; border: none; text-decoration: underline; cursor: pointer; min-height: 44px; padding: 0 12px; }
   .cal-day {
     aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 17px;
     border-radius: var(--radius-sm); position: relative; font-variant-numeric: tabular-nums;
@@ -422,6 +424,7 @@
     <div class="cal-grid" id="calGrid"></div>
     <div class="cal-legend" id="calLegend">
     </div>
+    <button type="button" class="cal-week" id="calWeek"></button>
     <div class="key-dates" id="keyDates"></div>
   </section>
 
@@ -485,7 +488,8 @@
 
 <!-- おくるんのカードの入口（LIFF ID とカードの URL は line-share の shared/oqrn.js に1か所） -->
 <script src="https://katsuan.github.io/line-share/shared/oqrn.js"></script>
-<script src="params.js?v=202610222222"></script>
+<script src="params.js?v=202610230232"></script>
+<script src="calendar.js?v=202610230232"></script>
 <script>
 (() => {
   "use strict";
@@ -693,36 +697,40 @@
     isAhead(due) && { label: "予定日", dot: "due", date: due },
   ].filter(Boolean).sort((a, b) => a.date - b.date);
 
+  // 週のはじまり：0＝日曜（いままで）・1＝月曜。この端末に覚える
+  const WEEK_KEY = "babyq:weekStart";
+  let weekStart = 0;
+  try { weekStart = localStorage.getItem(WEEK_KEY) === "1" ? 1 : 0; } catch (_) {}
+
   function renderCal() {
     $("calTitle").textContent = `${calY}年 ${calM + 1}月`;
     const grid = $("calGrid");
-    const dows = ["日", "月", "火", "水", "木", "金", "土"];
-    let html = dows.map(d => `<div class="cal-dow">${d}</div>`).join("");
-    const first = new Date(calY, calM, 1);
-    const startDow = first.getDay();
-    const daysInMonth = new Date(calY, calM + 1, 0).getDate();
-    const prevDays = new Date(calY, calM, 0).getDate();
-    const cells = Math.ceil((startDow + daysInMonth) / 7) * 7;
-    const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    for (let i = 0; i < cells; i++) {
-      const dayNum = i - startDow + 1;
-      if (dayNum < 1 || dayNum > daysInMonth) {
-        const n = dayNum < 1 ? prevDays + dayNum : dayNum - daysInMonth;
-        html += `<div class="cal-day muted">${n}</div>`;
+    const DOW = "日月火水木金土";
+    let html = RevealCalendar.weekdays(weekStart).map(w => `<div class="cal-dow${w === 0 ? " sun" : w === 6 ? " sat" : ""}">${DOW[w]}</div>`).join("");
+    const todayMid = startOfDay(today);
+    for (const cell of RevealCalendar.monthCells(calY, calM, weekStart)) {
+      if (cell.muted) {
+        html += `<div class="cal-day muted">${cell.day}</div>`;
         continue;
       }
-      const d = new Date(calY, calM, dayNum);
+      const d = new Date(calY, calM, cell.day);
       const cls = ["cal-day"];
       if (d < todayMid) cls.push("past");
       if (sameDay(d, today)) cls.push("today");
       if (revealAt && sameDay(d, revealAt)) cls.push("reveal-day");
       if (due && sameDay(d, due)) cls.push("due");
-      html += `<div class="${cls.join(" ")}">${dayNum}</div>`;
+      html += `<div class="${cls.join(" ")}">${cell.day}</div>`;
     }
+    $("calWeek").textContent = weekStart ? "日曜はじまりにする" : "月曜はじまりにする";
     grid.innerHTML = html;
     const inView = d => d && d.getFullYear() === calY && d.getMonth() === calM;
     document.querySelectorAll("#calLegend .legend-btn").forEach(b => b.classList.toggle("current", inView(jumps[b.dataset.i].date)));
   }
+  $("calWeek").onclick = () => {
+    weekStart = weekStart ? 0 : 1;
+    try { localStorage.setItem(WEEK_KEY, String(weekStart)); } catch (_) {}
+    renderCal();
+  };
   $("calPrev").onclick = () => { calM--; if (calM < 0) { calM = 11; calY--; } renderCal(); };
   $("calNext").onclick = () => { calM++; if (calM > 11) { calM = 0; calY++; } renderCal(); };
   // 凡例タップでその日の月へジャンプ
@@ -1050,7 +1058,8 @@
       actionUrl: SHARE_URL,
     });
     q.set("from", "gender-reveal"); // おくるん側で、ジェンダーリビールから来たと数える（流入口）
-    return OQRN.cardUrl(q);
+    // おくるんの部品が読めない（電波なしなど）ときも、ページの準備は止めない（送るボタンだけ使えない）
+    return window.OQRN ? OQRN.cardUrl(q) : "#";
   }
   $("lineFlexBtn").href = buildFlexUrl();
   // 送るときの例文。性別は書かない(転送先へのネタバレ防止)

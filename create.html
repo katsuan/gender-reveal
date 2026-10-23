@@ -399,7 +399,7 @@
       actionUrl: revealUrl,
     });
     q.set("from", "gender-reveal"); // おくるん側で、ジェンダーリビールから来たと数える（流入口）
-    return OQRN.cardUrl(q);
+    return window.OQRN ? OQRN.cardUrl(q) : "#"; // 電波なしなどで部品が読めないときは送れないだけ
   }
 
   const PUBLIC_KEYS = ["due", "reveal", "dad", "mom", "title", "taps"];

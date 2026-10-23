@@ -92,6 +92,13 @@
     delete p.g;
   }
 
+  // カレンダーにある日か（2月30日・13月などは読まない。そのまま Date に渡すと次の月の日にずれる）
+  function realDay(text) {
+    const [y, m, d] = text.slice(0, 10).split("-").map(Number);
+    const day = new Date(Date.UTC(y, m - 1, d));
+    return day.getUTCMonth() === m - 1 && day.getUTCDate() === d;
+  }
+
   // 決まった項目・形・長さにそろえる（secret はそのまま）。p を書きかえて返す
   function cleanParams(p) {
     const out = {};
@@ -106,8 +113,8 @@
       // CSS に入るので、#rrggbb などの色か、色の名前だけ
       if (typeof p[k] === "string" && /^(#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})|[a-z]{3,20})$/i.test(p[k].trim())) out[k] = p[k].trim();
     }
-    if (typeof p.due === "string" && /^\d{4}-\d{2}-\d{2}$/.test(p.due)) out.due = p.due;
-    if (typeof p.reveal === "string" && /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?$/.test(p.reveal)) out.reveal = p.reveal;
+    if (typeof p.due === "string" && /^\d{4}-\d{2}-\d{2}$/.test(p.due) && realDay(p.due)) out.due = p.due;
+    if (typeof p.reveal === "string" && /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?$/.test(p.reveal) && realDay(p.reveal)) out.reveal = p.reveal;
     if (/^\d{1,3}$/.test(String(p.taps ?? ""))) out.taps = String(p.taps);
     out.gender = p.gender || p.g || null;
     if (p.secret) out.secret = p.secret;

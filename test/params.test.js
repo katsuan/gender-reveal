@@ -7,11 +7,12 @@ const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
 
-const XSS = "<img src=x onerror=alert(1)>";
+const XSS = "<img src=x onerror=alert(1)>"; // qcheck-ok: W8 外からの文字の見本
 const ROOT = path.join(__dirname, "..");
 const ctx = { window: {}, URLSearchParams, TextEncoder, TextDecoder, atob, btoa, crypto: globalThis.crypto, console };
 vm.createContext(ctx);
 vm.runInContext(fs.readFileSync(path.join(ROOT, "params.js"), "utf8"), ctx);
+vm.runInContext(fs.readFileSync(path.join(ROOT, "calendar.js"), "utf8"), ctx);
 // 作る画面（create.html）の v3 の作り方をそのまま使う
 const create = fs.readFileSync(path.join(ROOT, "create.html"), "utf8");
 const pick = (from, to) => create.slice(create.indexOf(from), create.indexOf(to));
@@ -90,4 +91,35 @@ test("v3 の文字の長さがうそ（中身より長い）でも落ちない",
 test("v1（?d=&s=）の古いリンクも、決まった項目だけ受けとる", () => {
   const P = R.readParams("?d=" + b64(JSON.stringify({ due: "2027-01-01", mom: "花子", boyColor: "expression(alert(1))", extra: 1 })));
   assert.deepEqual(plainObj(P), { mom: "花子", due: "2027-01-01", gender: null });
+});
+
+test("ない日（2月30日など）の予定日・発表日は読まない（次の月の日にずらさない）", () => {
+  const P = R.readParams("?gender=girl&due=2027-02-30&reveal=2026-11-31T19:00");
+  assert.equal(P.due, undefined);
+  assert.equal(P.reveal, undefined);
+  const ok = R.readParams("?gender=girl&due=2028-02-29&reveal=2026-12-24T19:00");
+  assert.equal(ok.due, "2028-02-29");
+  assert.equal(ok.reveal, "2026-12-24T19:00");
+  assert.equal(R.readParams("?gender=girl&due=2027-02-29").due, undefined, "うるう年でない年の2月29日");
+});
+
+test("カレンダー：日曜はじまり（いままで）と月曜はじまりで、1日の位置と曜日の並びが変わる", () => {
+  const Cal = ctx.window.RevealCalendar;
+  // 2026年10月1日は木曜
+  const sun = Cal.monthCells(2026, 9, 0);
+  const mon = Cal.monthCells(2026, 9, 1);
+  assert.equal(sun.findIndex((c) => !c.muted && c.day === 1), 4);
+  assert.equal(mon.findIndex((c) => !c.muted && c.day === 1), 3);
+  assert.equal(sun.length % 7, 0);
+  assert.equal(mon.filter((c) => !c.muted).length, 31);
+  assert.deepEqual(plainObj(Cal.weekdays(0)), [0, 1, 2, 3, 4, 5, 6]);
+  assert.deepEqual(plainObj(Cal.weekdays(1)), [1, 2, 3, 4, 5, 6, 0]);
+  // 2027年2月1日は月曜：月曜はじまりなら、ちょうど4行
+  const feb = Cal.monthCells(2027, 1, 1);
+  assert.equal(feb.length, 28);
+  assert.equal(feb[0].day, 1);
+  assert.equal(feb[0].muted, false);
+  // 前の月の終わり（2026年3月の前は2月、28日まで）
+  const mar = Cal.monthCells(2026, 2, 1);
+  assert.equal(mar.filter((c) => c.muted)[0].day, 23);
 });
