@@ -25,7 +25,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
 <!-- Q キット（おくるんの共通部品）。色と字は下の :root で、ジェンダーリビールの色に -->
-<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css">
+<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css?v=202610241439">
 <script src="https://katsuan.github.io/line-share/shared/ui.js" defer></script>
 <style>
   :root {
@@ -128,7 +128,6 @@
   /* 作ったあとの補助的な操作のまとまり */
   .out-block { display: grid; gap: 8px; border-top: 1px dashed var(--line); padding-top: 14px; }
   .out-label { font-size: 15px; font-weight: 700; color: var(--ink-soft); }
-  .btn.line { background: var(--line-green); box-shadow: 0 6px 16px rgba(6, 199, 85, .25); text-align: center; text-decoration: none; }
   .btn { text-align: center; }
   .gender input[name="twins"]:checked + span { border-color: var(--gold); background: #fffaeb; }
   a { color: var(--girl-deep); }
@@ -231,7 +230,7 @@
   <!-- 作ったあと：送る操作を先頭に、答えが見えてしまう「開いてみる」は最後に置く -->
   <section class="ls-panel out" id="out">
     <p class="ls-panel-title">🎉 できました！ カードで送りましょう</p>
-    <a class="btn line" id="lineFlex" target="_blank" rel="noopener">💬 カードで送る（おすすめ）</a>
+    <a class="ls-button is-block line is-oqrn" id="lineFlex" target="_blank" rel="noopener">カードで送る（おすすめ）</a>
     <p class="note" id="lenWarn" style="display:none;color:var(--girl-deep)">メッセージを短くしてね（いまは URL が長く、カードのボタンに入らないかもしれません）。</p>
 
     <div class="out-block">
@@ -462,7 +461,7 @@
   document.addEventListener("DOMContentLoaded", () => {
     LineShareUI.firstTip(
       "babyq",
-      ["性別を選んで「🎁 発表ページを作る」を押します", "合言葉を入れると、知っている人だけが答えを見られます", "「💬 カードで送る」で家族や友だちへ。プレゼントを開けるまで性別はヒミツ"],
+      ["性別を選んで「🎁 発表ページを作る」を押します", "合言葉を入れると、知っている人だけが答えを見られます", "「カードで送る」で家族や友だちへ。プレゼントを開けるまで性別はヒミツ"],
       form
     );
   });
