@@ -492,8 +492,9 @@
 
 <!-- おくるんのカードの入口（LIFF ID とカードの URL は line-share の shared/oqrn.js に1か所） -->
 <script src="https://katsuan.github.io/line-share/shared/oqrn.js"></script>
-<script src="params.js?v=202610241359"></script>
-<script src="calendar.js?v=202610241359"></script>
+<script src="https://katsuan.github.io/line-share/shared/week-start.js"></script>
+<script src="params.js?v=202610241408"></script>
+<script src="calendar.js?v=202610241408"></script>
 <script>
 (() => {
   "use strict";
@@ -701,10 +702,12 @@
     isAhead(due) && { label: "予定日", dot: "due", date: due },
   ].filter(Boolean).sort((a, b) => a.date - b.date);
 
-  // 週のはじまり：0＝日曜（いままで）・1＝月曜。この端末に覚える
+  // 週のはじまり：1＝月曜（既定）・0＝日曜。Q ツール共通の設定（line-share/shared/week-start.js の qlove:weekStart）を先に見る。
+  // まだないときは、前に BabyQ で選んだ値（babyq:weekStart）。共通の部品が読めないときも、BabyQ の値で動く
   const WEEK_KEY = "babyq:weekStart";
-  let weekStart = 0;
-  try { weekStart = localStorage.getItem(WEEK_KEY) === "1" ? 1 : 0; } catch (_) {}
+  let weekStart = 1;
+  try { const own = localStorage.getItem(WEEK_KEY); if (own === "0" || own === "1") weekStart = Number(own); } catch (_) {}
+  if (window.QWeekStart) weekStart = QWeekStart.get(weekStart);
 
   function renderCal() {
     $("calTitle").textContent = `${calY}年 ${calM + 1}月`;
@@ -733,6 +736,7 @@
   $("calWeek").onclick = () => {
     weekStart = weekStart ? 0 : 1;
     try { localStorage.setItem(WEEK_KEY, String(weekStart)); } catch (_) {}
+    window.QWeekStart?.set(weekStart); // ほかの Q ツールも同じ週のはじまりで開く
     renderCal();
   };
   $("calPrev").onclick = () => { calM--; if (calM < 0) { calM = 11; calY--; } renderCal(); };
