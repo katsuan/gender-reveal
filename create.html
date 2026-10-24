@@ -469,7 +469,7 @@
 
   // ボタン名どおりリンクだけをコピー(見えない文を混ぜない)
   $("copy").onclick = async () => {
-    try { await navigator.clipboard.writeText($("url").textContent); LineShareUI.toast("🔗 リンクをコピーしました"); }
+    try { await navigator.clipboard.writeText($("url").textContent); LineShareUI.toast(window.QSeason ? QSeason.decorate("🔗 リンクをコピーしました") : "🔗 リンクをコピーしました"); } // 季節の絵文字をときどき
     catch { LineShareUI.ask({ title: "長押ししてコピーしてね", input: $("url").textContent, readonly: true, ok: "閉じる", cancel: null }); }
   };
 })();
