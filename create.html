@@ -219,7 +219,7 @@
     <details class="ls-fold">
       <summary><span class="ls-fold-icon" aria-hidden="true">🔒</span>合言葉・発表日時 <span class="ls-fold-meta">なくてもOK</span></summary>
       <div class="ls-fold-body">
-        <div class="ls-field"><label class="ls-label">合言葉<span class="opt">おすすめ</span></label><input class="ls-input" name="pass" placeholder="例: ひよこ"><p class="note" style="margin-top:6px">合言葉を知っている人だけが答えを見られます。合言葉はURLとは別に、LINEや電話で伝えてね。</p></div>
+        <div class="ls-field"><label class="ls-label">合言葉<span class="opt">おすすめ</span></label><input class="ls-input" name="pass" placeholder="例: ひよこ"><p class="note" style="margin-top:6px">合言葉を知っている人だけが答えを見られます。合言葉はURLとは別に、メッセージや電話で伝えてね。</p></div>
         <div class="ls-field"><label class="ls-label">発表してよい日時</label><input class="ls-input" name="reveal" type="datetime-local"><p class="note" style="margin-top:6px">この日時になるまで、発表ボタンは押せません。みんなで同時に見たいときに。</p></div>
         <div class="ls-field"><label class="ls-label">プレゼントを開けるまでのタップ回数</label><select class="ls-input" name="taps"><option value="1">1回</option><option value="3">3回</option><option value="5" selected>5回（標準）</option><option value="7">7回</option><option value="10">10回</option><option value="15">15回</option><option value="20">20回</option></select><p class="note" style="margin-top:6px">多いほどドキドキが長くなります。おじいちゃん・おばあちゃんには3〜5回がおすすめ。</p></div>
       </div>
@@ -230,9 +230,9 @@
 
   <!-- 作ったあと：送る操作を先頭に、答えが見えてしまう「開いてみる」は最後に置く -->
   <section class="ls-panel out" id="out">
-    <p class="ls-panel-title">🎉 できました！ LINEで送りましょう</p>
-    <a class="btn line" id="lineFlex" target="_blank" rel="noopener">💌 カードで送る（おすすめ）</a>
-    <p class="note" id="lenWarn" style="display:none;color:var(--girl-deep)">URLが長すぎて、LINEのカードのボタンに入らないかもしれません。メッセージを短くしてね。</p>
+    <p class="ls-panel-title">🎉 できました！ カードで送りましょう</p>
+    <a class="btn line" id="lineFlex" target="_blank" rel="noopener">💬 カードで送る（おすすめ）</a>
+    <p class="note" id="lenWarn" style="display:none;color:var(--girl-deep)">メッセージを短くしてね（いまは URL が長く、カードのボタンに入らないかもしれません）。</p>
 
     <div class="out-block">
       <span class="out-label">リンクだけ送るときは</span>
@@ -462,7 +462,7 @@
   document.addEventListener("DOMContentLoaded", () => {
     LineShareUI.firstTip(
       "babyq",
-      ["性別を選んで「🎁 発表ページを作る」を押します", "合言葉を入れると、知っている人だけが答えを見られます", "「💌 カードで送る」で LINE へ。プレゼントを開けるまで性別はヒミツ"],
+      ["性別を選んで「🎁 発表ページを作る」を押します", "合言葉を入れると、知っている人だけが答えを見られます", "「💬 カードで送る」で家族や友だちへ。プレゼントを開けるまで性別はヒミツ"],
       form
     );
   });
