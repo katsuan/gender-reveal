@@ -492,8 +492,8 @@
 
 <!-- おくるんのカードの入口（LIFF ID とカードの URL は line-share の shared/oqrn.js に1か所） -->
 <script src="https://katsuan.github.io/line-share/shared/oqrn.js"></script>
-<script src="params.js?v=202610241328"></script>
-<script src="calendar.js?v=202610241328"></script>
+<script src="params.js?v=202610241359"></script>
+<script src="calendar.js?v=202610241359"></script>
 <script>
 (() => {
   "use strict";
@@ -981,12 +981,9 @@
       : daysLeft === 0 ? "今日が出産予定日です 👶" : "";
     $("result").classList.add("show");
     // すくすくへ：予定日がまだ先なら、予定日と名前（発表のあとなので見せてよい）を渡す
-    if (due && daysLeft > 0) {
-      const q = new URLSearchParams({ due: P.due });
-      if (P.name) q.set("name", P.name);
-      $("suqsuqBtn").href = `https://katsuan.github.io/suqsuq/?${q}`;
-    }
-    $("suqsuqBtn").hidden = !(due && daysLeft > 0);
+    const suqsuq = R.suqsuqUrl(P, daysLeft);
+    if (suqsuq) $("suqsuqBtn").href = suqsuq;
+    $("suqsuqBtn").hidden = !suqsuq;
 
     const palette = /boy/.test(P.gender) ? [color, deep, "#ffffff", "#bfe3ff", cssVar("--gold")]
       : /girl/.test(P.gender) ? [color, deep, "#ffffff", "#ffd6e5", cssVar("--gold")]

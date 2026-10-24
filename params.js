@@ -168,5 +168,14 @@
     return cleanParams(P);
   }
 
-  window.RevealParams = { readParams, readV3Secret, applySecret, cleanParams, b64urlToBytes };
+  // 発表のあと、すくすく（SuQSuQ）を「おなかの中」で開くリンク。予定日がまだ先のときだけ（そうでなければ null）
+  //   形はすくすくと同じ ?due=YYYY-MM-DD&name=…（名前は発表のあとなので見せてよい）
+  function suqsuqUrl(P, daysLeft) {
+    if (!P.due || !(daysLeft > 0)) return null;
+    const q = new URLSearchParams({ due: P.due });
+    if (P.name) q.set("name", P.name);
+    return `https://katsuan.github.io/suqsuq/?${q}`;
+  }
+
+  window.RevealParams = { readParams, readV3Secret, applySecret, cleanParams, b64urlToBytes, suqsuqUrl };
 })();

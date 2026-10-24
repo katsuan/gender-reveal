@@ -123,3 +123,12 @@ test("カレンダー：日曜はじまり（いままで）と月曜はじま�
   const mar = Cal.monthCells(2026, 2, 1);
   assert.equal(mar.filter((c) => c.muted)[0].day, 23);
 });
+
+test("すくすくへのリンク：予定日がまだ先のときだけ、予定日と名前を渡す", () => {
+  const P = R.readParams("?gender=girl&due=2027-02-14&name=" + encodeURIComponent("ひな"));
+  assert.equal(R.suqsuqUrl(P, 30), "https://katsuan.github.io/suqsuq/?due=2027-02-14&name=" + encodeURIComponent("ひな"));
+  assert.equal(R.suqsuqUrl(R.readParams("?gender=boy&due=2027-02-14"), 30), "https://katsuan.github.io/suqsuq/?due=2027-02-14");
+  assert.equal(R.suqsuqUrl(P, 0), null);
+  assert.equal(R.suqsuqUrl(P, null), null);
+  assert.equal(R.suqsuqUrl(R.readParams("?gender=boy"), 30), null);
+});
