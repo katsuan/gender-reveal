@@ -1,4 +1,4 @@
-// ジェンダーリビール：URL の中身（#…・?p=・?d=・平文）を読むテスト（画面に触らない部分。params.js）
+// ジェンダーリビール：URL の中身（#…・?p=・?d=・平文）を読むテスト（画面に触らない部分。js/link.js）
 //   node --test test/
 "use strict";
 const test = require("node:test");
@@ -11,10 +11,10 @@ const XSS = "<img src=x onerror=alert(1)>"; // qcheck-ok: W8 外からの文字�
 const ROOT = path.join(__dirname, "..");
 const ctx = { window: {}, URLSearchParams, TextEncoder, TextDecoder, atob, btoa, crypto: globalThis.crypto, console };
 vm.createContext(ctx);
-vm.runInContext(fs.readFileSync(path.join(ROOT, "params.js"), "utf8"), ctx);
-vm.runInContext(fs.readFileSync(path.join(ROOT, "calendar.js"), "utf8"), ctx);
-// 作る画面（create.html）の v3 の作り方をそのまま使う
-const create = fs.readFileSync(path.join(ROOT, "create.html"), "utf8");
+vm.runInContext(fs.readFileSync(path.join(ROOT, "js/link.js"), "utf8"), ctx);
+vm.runInContext(fs.readFileSync(path.join(ROOT, "js/calendar.js"), "utf8"), ctx);
+// 作る画面（create.js）の v3 の作り方をそのまま使う
+const create = fs.readFileSync(path.join(ROOT, "create.js"), "utf8");
 const pick = (from, to) => create.slice(create.indexOf(from), create.indexOf(to));
 vm.runInContext(pick("function bytesToB64url", "/* ============ 短縮URL(v2)") + pick("const V3_EPOCH", "/* ============ LINE共有") + ";globalThis.buildTokenV3 = buildTokenV3;", ctx);
 const R = ctx.window.RevealParams;
