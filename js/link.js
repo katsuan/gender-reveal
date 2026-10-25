@@ -1,4 +1,4 @@
-// URL の中身を読む（index.html で使う。画面には触らない。test/ で確かめる）
+// ジェンダーリビール：URL の中身を読む（index.html で使う。画面には触らない。test/ で確かめる）
 //   v3(現行): #<base64url>  詰めたバイナリ形式。詳細は create.js の buildTokenV3 と下の readV3
 //   v2(旧)  : ?p=<base64url>  1パラメータにまとめた短縮形式
 //     bytes = [2][flags][pubLen 2byte][pub JSON(短縮キー)][salt 8][iv 12][暗号文+tag][key 12 ※flags&1 のとき]
@@ -7,6 +7,7 @@
 //   v1(旧) : ?d=<公開JSON>&s=v1.<salt>.<iv>.<ct>[.<key>]  互換のため読み込み可
 //   平文    : ?gender=girl&due=2027-02-14&reveal=2026-10-01T19:00&mom=花子&dad=太郎&name=ひな&msg=...
 // URL の中身は外から来た文字なので、cleanParams で決まった項目・形・長さにそろえてから使う
+// 読まれるところ：index.html（app.js の前。window.RevealParams）。テストからも読む
 (function () {
   "use strict";
 
@@ -23,11 +24,15 @@
   const COLOR_KEYS = ["color", "boyColor", "girlColor"];
   const SEARCH_MAX = 8000; // URL の中身の長さの上限（ふつうは 200 字ほど）
 
+  // base64url の文字をバイトの並びにする
   const b64urlToBytes = (s) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), (c) => c.charCodeAt(0));
   const bytesToB64url = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  // base64url の文字を UTF-8 の文字に戻す
   const b64urlDecode = (str) => new TextDecoder().decode(b64urlToBytes(str));
+  // 数字だけの日時（20270214・202612241900）を - と : の入った形に戻す
   const expandDate = (v) => (v && v.length >= 8 ? `${v.slice(0, 4)}-${v.slice(4, 6)}-${v.slice(6, 8)}` + (v.length >= 12 ? `T${v.slice(8, 10)}:${v.slice(10, 12)}` : "") : v);
 
+  // v2 の形（?p=）を読んで p に入れる（読めないときは投げる）
   function readV2(token, p) {
     const bytes = b64urlToBytes(token);
     if (bytes[0] !== 2) throw new Error("unsupported");
@@ -46,6 +51,7 @@
 
   // v3: [0x30|合言葉あり][項目マスク][公開項目…][salt 8 ※合言葉あり][暗号文+tag 12][鍵 12 ※合言葉なし]
   function v3Reader(bytes, i = 0) {
+    // あと n バイトあるか（なければ投げる）
     const need = (n) => {
       if (i + n > bytes.length) throw new Error("short");
     };
@@ -57,6 +63,7 @@
     };
     return r;
   }
+  // v3 の形（#…）を読んで p に入れる（読めないときは投げる）
   function readV3(token, p) {
     const bytes = b64urlToBytes(token);
     if (bytes[0] >> 4 !== 3) throw new Error("unsupported");
@@ -75,6 +82,7 @@
     if (end <= i) throw new Error("short");
     p.secret = { v: 3, salt, ct: bytes.slice(i, end), key: hasPass ? null : bytes.slice(end) };
   }
+  // v3 の答えの中身（開いたあとのバイト）を読む
   function readV3Secret(plain) {
     const r = v3Reader(plain), head = r.byte(), out = { gender: V3_GENDERS[head & 7] };
     if (head & 8) out.name = r.str();
@@ -85,6 +93,7 @@
     return out;
   }
 
+  // 性別の書き方をそろえる（boy・girl・twins-… など。わからなければ null）
   function normalizeGender(p) {
     const g = String(p.gender || p.g || "").trim().toLowerCase();
     p.gender = GENDER_KEYS.includes(g) ? g : ALIASES[g] || null;

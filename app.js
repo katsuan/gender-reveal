@@ -1,4 +1,5 @@
 // ジェンダーリビール（BabyQ）：発表のページ（index.html）の入口。URL の中身は js/link.js、カレンダーのマスは js/calendar.js
+// 読まれるところ：index.html（いちばん最後。js/link.js・js/calendar.js のあと）
 (() => {
   "use strict";
 
@@ -46,6 +47,7 @@
 
   /* ============ 復号(AES-GCM) ============ */
   const needsPass = !!P.secret && !P.secret.key;
+  // 合言葉（なければ鍵）で答えを開いて、P に入れる。合言葉がちがうと投げる
   async function decryptSecret(pass) {
     const { v, salt, iv, ct, key } = P.secret;
     if (v === 3) {
@@ -71,6 +73,7 @@
     R.applySecret(P, JSON.parse(new TextDecoder().decode(plain)), v);
   }
 
+  // "2027-02-14" や "2026-12-24T19:00" を日時にする（読めなければ null）
   function parseDate(s) {
     if (!s) return null;
     const d = new Date(/T/.test(s) ? s : s + "T00:00:00");
@@ -82,15 +85,23 @@
   /* ============ ユーティリティ ============ */
   const $ = id => document.getElementById(id);
   const root = document.documentElement;
+  // CSS の変数の値を読む
   const cssVar = n => getComputedStyle(root).getPropertyValue(n).trim();
+  // 同じ日か
   const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  // 2けたにそろえる
   const pad = n => String(n).padStart(2, "0");
+  // 「2027年2月14日」の形
   const fmtDate = d => `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
   // 画面表示用: 曜日つき「10月10日(土)」、時刻は「19時」「19時30分」
   const fmtDateW = d => `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日(${"日月火水木金土"[d.getDay()]})`;
+  // 「19時」「19時30分」の形
   const fmtTime = d => `${d.getHours()}時${d.getMinutes() ? d.getMinutes() + "分" : ""}`;
+  // その日の 0 時
   const startOfDay = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  // HTML に入れる文字にする
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  // ms ミリ秒待つ
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
   // カスタム色
@@ -111,6 +122,7 @@
     const s = Math.floor(ms / 1e3);
     return { d, h, m, s, done: target - Date.now() <= 0 };
   }
+  // 発表までの残り（日・時・分・秒）を描く。過ぎていたら doneText を出して true
   function renderCountdown(el, target, doneText) {
     const p = diffParts(target);
     if (p.done) { el.innerHTML = `<div class="cd-done">${doneText}</div>`; return true; } // qcheck-ok: W1 doneText は決まった文字だけ
@@ -122,6 +134,7 @@
     return false;
   }
 
+  // 妊娠の進み（いま何か月・何週）のバーを描く
   function renderProgress() {
     if (!due) { $("progress").style.display = "none"; return; }
     const start = new Date(due.getTime() - PREGNANCY_DAYS * 864e5);
@@ -136,6 +149,7 @@
     });
   }
 
+  // 予定日まで「あと何日」と、発表のロックを描きなおす（1秒ごと）
   function tick() {
     if (due) {
       // 予定日までは秒まで動かさず「あと○日」だけ
@@ -160,6 +174,7 @@
   $("steps").innerHTML = steps.map((s, i) => `<li><span class="n">${i + 1}</span>${esc(s)}</li>`).join("");
 
   let lockedPrev = null;
+  // 発表の時間まではボタンを押せないようにし、時間になったら押せるようにする
   function updateLock() {
     const btn = $("startBtn");
     if (!P.gender && !P.secret) {
@@ -212,6 +227,7 @@
   try { const own = localStorage.getItem(WEEK_KEY); if (own === "0" || own === "1") weekStart = Number(own); } catch (_) {}
   if (window.QWeekStart) weekStart = QWeekStart.get(weekStart);
 
+  // いまの月のカレンダー（週のはじまりに合わせて）を描く
   function renderCal() {
     $("calTitle").textContent = `${calY}年 ${calM + 1}月`;
     const grid = $("calGrid");
@@ -233,6 +249,7 @@
     }
     $("calWeek").textContent = weekStart ? "日曜はじまりにする" : "月曜はじまりにする";
     grid.innerHTML = html;
+    // その日がいま見ている月か
     const inView = d => d && d.getFullYear() === calY && d.getMonth() === calM;
     document.querySelectorAll("#calLegend .legend-btn").forEach(b => b.classList.toggle("current", inView(jumps[b.dataset.i].date)));
   }
@@ -264,6 +281,7 @@
   const BOY_EMOJI = ["👦", "💙", "🚙", "🧢"];         // 青系
   const GIRL_EMOJI = ["👧", "🩷", "🎈", "🎀"];        // 赤・ピンク系
   const NEUTRAL_EMOJI = ["👶", "🐣", "🧸", "⭐", "✨", "💫", "🍼"]; // 青でも赤でもない
+  // 配列をまぜて返す
   const shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(x => x[1]);
 
   /* ============ 背景バルーン ============ */
@@ -285,8 +303,11 @@
 
   /* ============ サウンド(Web Audio 合成) ============ */
   let ac = null;
+  // 音を出す設定か
   const soundOn = () => $("soundOn").checked;
+  // 音の準備（AudioContext）
   function audio() { if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)(); return ac; }
+  // 音を1つ鳴らす（高さ・長さ・音色・大きさ・鳴りはじめ）
   function tone(freq, dur = .15, type = "sine", vol = .2, when = 0) {
     if (!soundOn()) return;
     const c = audio(), t = c.currentTime + when;
@@ -313,6 +334,7 @@
       });
     }
   }
+  // 発表のときのファンファーレ
   function fanfare() {
     [523, 659, 784, 1047].forEach((f, i) => tone(f, .35, "triangle", .22, i * .12));
     [784, 1047, 1319].forEach(f => tone(f, 1.2, "triangle", .12, .55));
@@ -330,6 +352,7 @@
   addEventListener("resize", resize); window.visualViewport?.addEventListener("resize", resize); resize();
   // 画面の高さではなくキャンバス全体を消す(一部だけ消し残して紙吹雪が帯状に残るのを防ぐ)
   function clearAll() { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height); ctx.restore(); }
+  // 紙ふぶきを1回はじけさせる
   function burst(colors, count = 180, origin = { x: innerWidth / 2, y: innerHeight * .45 }) {
     for (let i = 0; i < count; i++) {
       const a = Math.random() * Math.PI * 2, sp = 4 + Math.random() * 9;
@@ -341,6 +364,7 @@
     }
     if (!raf) loop();
   }
+  // 紙ふぶきを secs 秒ふらせる
   function rain(colors, secs = 4) {
     const end = Date.now() + secs * 1000;
     (function drop() {
@@ -353,6 +377,7 @@
       if (Date.now() < end && stage.classList.contains("show")) setTimeout(drop, 60);
     })();
   }
+  // 紙ふぶきを1こま進めて描く（残りがあれば続ける）
   function loop() {
     clearAll();
     parts = parts.filter(p => p.life < p.max && p.y < cv.clientHeight + 40);
@@ -372,6 +397,7 @@
   const stage = $("stage"), gift = $("gift");
   let taps = 0, busy = false;
 
+  // プレゼントの画面をはじめの形に戻す
   function resetStage() {
     taps = 0; busy = false;
     stage.className = "stage show";
@@ -390,7 +416,9 @@
 
   // タップ回数に関わらず進み具合に応じてヒントを出す
   const tapHints = ["ん？ 何か入ってる…", "ゴソゴソ…", "もうちょっと！", "ドキドキ…"];
+  // タップの回数に合わせた声かけ
   const hintFor = n => n >= TAPS_TO_OPEN ? "" : tapHints[Math.min(tapHints.length - 1, Math.floor((n - 1) / TAPS_TO_OPEN * tapHints.length))];
+  // タップしたところをキラッと光らせる
   function sparkle(x, y) {
     const r = gift.getBoundingClientRect();
     ["✨", "⭐", "💫", "✨"].forEach((e, i) => {
@@ -407,6 +435,7 @@
   // プレゼントの後ろから絵文字が飛び出す。1回ごとに男の子系/女の子系を同数にし、残りは中性
   // (2個 → 男1女1 / 3個 → 男1女1中1 / 5個 → 男2女2中1)
   const pick = a => a[Math.floor(Math.random() * a.length)];
+  // プレゼントから絵文字を count こ飛び出させる
   function popOut(count) {
     const k = Math.floor(count / 2);
     const items = shuffle([
@@ -451,6 +480,7 @@
     }
   });
 
+  // 最後のタップのあと、ためてから発表する
   async function climax() {
     await sleep(600);
     if (!stage.classList.contains("show")) return; // 途中で「もどる」された
@@ -466,6 +496,7 @@
     reveal();
   }
 
+  // 答えを見せる（色・文字・紙ふぶき・すくすくへのリンク）
   function reveal() {
     const g = GENDERS[P.gender] || { lead: "生まれてくるのは…", label: P.label || "？", emoji: P.emoji || "🎉", color: "--gold", deep: "--gold-deep" };
     const color = P.color || cssVar(g.color), deep = P.color || cssVar(g.deep);
@@ -552,6 +583,7 @@
 
   // おくるカード（お知らせカード）にカード内容を渡して共有。create.html と同じ中立的なカード
   const NEUTRAL_COLOR = "#9b7fd1";
+  // 家族にも送るカード（おくるんのお知らせカード）のリンク。性別は書かない
   function buildFlexUrl() {
     const parents = [P.dad, P.mom].filter(Boolean).join(" & ");
     const lines = [
@@ -603,6 +635,7 @@
     const FONT = cssVar("--font");
     const color = cssVar("--reveal"), deep = cssVar("--reveal-deep");
     const ink = cssVar("--ink"), soft = cssVar("--ink-soft");
+    // 画像の文字の書体（大きさ・太さ）
     const font = (size, weight = 800) => `${weight} ${size}px ${FONT}`;
     // 幅に収まるまで小さくして1行で描く
     const fit = (text, y, size, { weight = 800, fill = ink, min = 24, maxWidth = W - 200 } = {}) => {
@@ -617,6 +650,7 @@
       const m = /^#?([0-9a-f]{6})$/i.exec(hex);
       if (!m) return "#f3ecff";
       const n = parseInt(m[1], 16);
+      // 色の1つの成分（R・G・B）を白に寄せる
       const ch = (shift) => Math.round(255 - (255 - ((n >> shift) & 255)) * amount);
       return `rgb(${ch(16)}, ${ch(8)}, ${ch(0)})`;
     };
@@ -665,6 +699,7 @@
       actions.append(share);
     }
     actions.append(Object.assign(document.createElement("a"), { className: "pill", href: url, download: file.name, textContent: "⬇️ ダウンロード" }));
+    // 画像の窓を閉じて、画像の URL を片づける
     const close = () => { sheet.remove(); URL.revokeObjectURL(url); };
     sheet.querySelector(".snap-card > button").onclick = close;
     sheet.addEventListener("click", (e) => { if (e.target === sheet) close(); });

@@ -1,6 +1,8 @@
 // ジェンダーリビール（BabyQ）：作るページ（create.html）の入口。答えを暗号にして、発表ページのリンク（#… の v3）を作る
+// 読まれるところ：create.html（いちばん最後）
 (() => {
   "use strict";
+  // id の要素を返す
   const $ = id => document.getElementById(id);
   const form = $("form");
 
@@ -18,9 +20,11 @@
     $("twinsBox").style.display = form.gender.value === "twins" ? "block" : "none";
   });
 
+  // 文字を UTF-8 の base64url にする
   function b64urlEncode(str) {
     return bytesToB64url(new TextEncoder().encode(str));
   }
+  // バイトの並びを base64url の文字にする
   function bytesToB64url(bytes) {
     let bin = ""; bytes.forEach(b => bin += String.fromCharCode(b));
     return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
@@ -33,10 +37,14 @@
   const GENDER_CODES = { boy: "b", girl: "g", "twins-boys": "B", "twins-girls": "G", "twins-mixed": "M", twins: "T", custom: "c" };
   const PUB_SHORT = { due: "u", reveal: "r", dad: "f", mom: "m", title: "t", taps: "k" };
   const SECRET_SHORT = { gender: "g", name: "n", msg: "s", label: "l", emoji: "e", color: "c" };
+  // 日時を数字だけにする（2026-12-24T19:00 → 202612241900）
   const compactDate = v => v.replace(/[-T:]/g, "");
+  // 項目の名前を短い名前（map）に置きかえる
   const shorten = (obj, map) => Object.fromEntries(Object.entries(obj).map(([k, v]) => [map[k], v]));
 
+  // v2 の形（?p=）のリンクの中身を作る（合言葉があれば暗号にする）
   async function buildToken(pub, sec, pass) {
+    // n バイトの乱数
     const rand = n => crypto.getRandomValues(new Uint8Array(n));
     const enc = new TextEncoder();
     const pubShort = shorten({ ...pub, ...(pub.due && { due: compactDate(pub.due) }), ...(pub.reveal && { reveal: compactDate(pub.reveal) }) }, PUB_SHORT);
@@ -68,12 +76,16 @@
   const V3_EPOCH = Date.UTC(2020, 0, 1);
   const V3_GENDERS = ["boy", "girl", "twins-boys", "twins-girls", "twins-mixed", "twins", "custom"];
   const V3_INFO = new TextEncoder().encode("gender-reveal v3");
+  // 数を可変長（7bit ずつ）で out に足す
   function pushVarint(out, n) { while (n >= 128) { out.push((n & 127) | 128); n >>>= 7; } out.push(n); }
+  // 文字を「長さ＋UTF-8」で out に足す
   function pushStr(out, s) { const b = new TextEncoder().encode(s); pushVarint(out, b.length); out.push(...b); }
 
   // 範囲外(2020年より前・発表日時が2051年以降など)は null を返し、v2 で作る
   async function buildTokenV3(pub, sec, pass) {
+    // n バイトの乱数
     const rand = n => crypto.getRandomValues(new Uint8Array(n));
+    // 日時を数の並びにする（2026-12-24 → [2026, 12, 24]）
     const ymd = v => v.split(/[-T:]/).map(Number);
     const out = [0x30 | (pass ? 1 : 0), 0];
     if (pub.due) {
@@ -114,10 +126,12 @@
   const LINE_URI_MAX = 1000; // LINE の URI アクション上限
   const NEUTRAL_COLOR = "#9b7fd1"; // 性別が推測されない中間色
 
+  // 「2月14日(日)」の形
   function fmtDue(v) {
     const [y, m, d] = v.split("-").map(Number);
     return `${y}年${m}月${d}日`;
   }
+  // 発表ページを送るカード（おくるんのお知らせカード）のリンク。性別は書かない
   function buildFlexUrl(revealUrl, pub, hasPass) {
     const parents = [pub.dad, pub.mom].filter(Boolean).join(" & ");
     const lines = [
@@ -152,6 +166,7 @@
     Object.entries(miss).forEach(([id, bad]) => $(id).classList.toggle("err", bad));
     const first = Object.keys(miss).find(k => miss[k]);
     if (first) { $(first).scrollIntoView({ behavior: "smooth", block: "center" }); return; }
+    // 入れた欄のうち、中身のあるものだけを集める
     const pick = keys => keys.reduce((o, k) => {
       const v = (fd.get(k) || "").trim();
       if (v && (fd.get("gender") === "custom" || !["label", "emoji", "color"].includes(k))) o[k] = v;
@@ -180,6 +195,7 @@
     if (isNaN(d)) return "";
     return `${d.getMonth() + 1}月${d.getDate()}日(${"日月火水木金土"[d.getDay()]}) ${d.getHours()}時${d.getMinutes() ? d.getMinutes() + "分" : ""}`;
   }
+  // 送るときの例文（性別は書かない）
   function buildExample(revealUrl, hasPass, reveal) {
     const when = reveal ? fmtReveal(reveal) : "";
     return [
