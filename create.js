@@ -14,6 +14,52 @@
   form.addEventListener("input", updateColorPreview);
   updateColorPreview();
 
+  // 自由に書く：絵文字は、発表する言葉の入力枠の中の左。押したとき・言葉を入れているあいだは、下に選べる絵文字とカスタム（Q キットの pickField）
+  const EMOJI_CHOICES = ["👦👧", "👶", "🍼", "🎉", "💛", "🌈", "⭐", "🐣"];
+  const emojiCustom = Object.assign(document.createElement("input"), { className: "ls-picker-custom", maxLength: 8, placeholder: "✏️" });
+  emojiCustom.setAttribute("aria-label", "ほかの絵文字");
+  // いまの絵文字を、枠の中のボタン・選べる絵文字・見本に出す（空なら 👦👧 をうすく）
+  function showEmoji() {
+    const v = form.emoji.value.trim();
+    $("emojiNow").textContent = v || "👦👧";
+    $("emojiNow").classList.toggle("is-empty", !v);
+    $("emojiBtn").setAttribute("aria-label", `絵文字を選ぶ（いま：${v || "なし"}）`);
+    $("emojiPicker").querySelectorAll(".ls-picker-item").forEach((b) => b.setAttribute("aria-pressed", String(b.textContent === v)));
+    emojiCustom.classList.toggle("is-selected", !!v && !EMOJI_CHOICES.includes(v));
+    updateColorPreview();
+  }
+  // 絵文字を選ぶ（空なら 👦👧 になる）
+  function setEmoji(v) {
+    form.emoji.value = v;
+    showEmoji();
+  }
+  $("emojiPicker").replaceChildren(
+    ...EMOJI_CHOICES.map((e) => {
+      const b = Object.assign(document.createElement("button"), { type: "button", className: "ls-picker-item", textContent: e });
+      b.addEventListener("click", () => {
+        emojiCustom.value = "";
+        setEmoji(e);
+        // 選んだらたたむ（言葉を入れているあいだは開いたまま）
+        if (document.activeElement !== $("revealLabel")) emojiPick ? emojiPick.close() : ($("emojiPicker").hidden = true);
+      });
+      return b;
+    }),
+    emojiCustom
+  );
+  emojiCustom.addEventListener("input", (e) => {
+    e.stopPropagation();
+    setEmoji(emojiCustom.value.trim());
+  });
+  showEmoji();
+  let emojiPick = null;
+  // Q キット（ui.js）は defer なので、読み終わってから
+  document.addEventListener("DOMContentLoaded", () => {
+    emojiPick = window.LineShareUI?.pickField?.({ field: $("labelField"), button: $("emojiBtn"), input: $("revealLabel"), picker: $("emojiPicker") }) || null;
+    // Q キットが古い・読めないときは、押して開く・たたむだけ
+    if (!emojiPick) $("emojiBtn").addEventListener("click", () => ($("emojiPicker").hidden = !$("emojiPicker").hidden));
+    showEmoji(); // 前の作りかけ・リンクから入った絵文字も出す
+  });
+
   form.addEventListener("change", e => {
     e.target.closest(".field")?.classList.remove("err");
     $("customBox").style.display = form.gender.value === "custom" ? "grid" : "none";

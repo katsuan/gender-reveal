@@ -25,8 +25,8 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
 <!-- Q キット（おくるんの共通部品）。色と字は下の :root で、ジェンダーリビールの色に -->
-<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css?v=202610251000">
-<script src="https://katsuan.github.io/line-share/shared/ui.js" defer></script>
+<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css?v=202610260300">
+<script src="https://katsuan.github.io/line-share/shared/ui.js?v=202610260300" defer></script>
 <style>
   :root {
     --boy: #5aa9e6;
@@ -113,6 +113,14 @@
   #customBox, #twinsBox { display: none; }
   /* 色: 共通の余白で見本がつぶれないよう大きな四角にし、横に発表の見え方を出す */
   #customBox .color-field { grid-column: 1 / -1; }
+  /* 絵文字と発表する言葉：横いっぱい。絵文字は2つ並ぶこともあるので、枠の中のボタンは字の幅に合わせ、字を少し小さく */
+  #customBox .emoji-label-field { grid-column: 1 / -1; }
+  #labelField { grid-template-columns: auto minmax(0, 1fr); }
+  #emojiNow { width: auto; min-width: 32px; padding: 0 6px; font-size: 18px; }
+  #emojiNow.is-empty { opacity: 0.45; }
+  /* 選べる絵文字は8列（2つ並ぶ絵文字も1行に）、カスタムはその下に横いっぱい */
+  #emojiPicker .ls-picker-item { font-size: 15px; white-space: nowrap; }
+  #emojiPicker .ls-picker-custom { grid-column: 1 / -1; margin-top: 2px; }
   .color-pick { display: flex; align-items: center; gap: 12px; }
   input[type=color] { flex: none; width: 64px; height: 56px; padding: 4px; cursor: pointer; }
   input[type=color]::-webkit-color-swatch-wrapper { padding: 0; }
@@ -185,8 +193,17 @@
       <p class="err-msg">ふたりの性別を選んでね</p>
     </div>
     <div id="customBox" class="row">
-      <div class="ls-field"><label class="ls-label">絵文字</label><input class="ls-input" name="emoji" placeholder="👦👧"></div>
-      <div class="ls-field"><label class="ls-label">発表する言葉</label><input class="ls-input" name="label" placeholder="男の子と女の子！"></div>
+      <!-- 入力枠の中の左に絵文字 [👦👧 発表する言葉]（Q キットの ls-pickfield。ろくが・さくせん盤・くろのすと同じ形）。
+           絵文字を押したとき・言葉を入れているあいだは、下に選べる絵文字とカスタム（しっぽが絵文字を指す）。選んだ絵文字は name="emoji" に入る -->
+      <div class="ls-field emoji-label-field">
+        <label class="ls-label" for="revealLabel">絵文字と発表する言葉</label>
+        <div id="labelField" class="ls-pickfield">
+          <button id="emojiBtn" class="ls-pickfield-btn" type="button" aria-controls="emojiPicker"><span id="emojiNow">👦👧</span></button>
+          <input id="revealLabel" name="label" placeholder="男の子と女の子！" autocomplete="off" enterkeyhint="done">
+        </div>
+        <div id="emojiPicker" class="ls-picker" role="radiogroup" aria-label="絵文字" style="--cols: 8" hidden></div>
+        <input type="hidden" name="emoji">
+      </div>
       <div class="color-field">
         <label class="ls-label">色<span class="opt">四角を押して選ぶ</span></label>
         <div class="color-pick">
@@ -256,7 +273,7 @@
 <!-- おくるんのカードの入口（LIFF ID とカードの URL は line-share の shared/oqrn.js に1か所） -->
 <script src="https://katsuan.github.io/line-share/shared/oqrn.js"></script>
 <script src="https://katsuan.github.io/line-share/shared/tool-share.js" data-tool="babyq" defer></script>
-<script src="create.js?v=202610250926"></script>
+<script src="create.js?v=202610260540"></script>
 <!-- 電波がなくても開けるように（sw.js） -->
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>
 </body>
