@@ -132,3 +132,12 @@ test("すくすくへのリンク：予定日がまだ先のときだけ、予�
   assert.equal(R.suqsuqUrl(P, null), null);
   assert.equal(R.suqsuqUrl(R.readParams("?gender=boy"), 30), null);
 });
+
+test("# の発表リンクに ? が足されても、# を読む（LINE やほかのアプリが ?openExternalBrowser=1 などを足したとき）", () => {
+  assert.equal(R.pickSearch("?openExternalBrowser=1", "#MAUKHAHw"), "#MAUKHAHw");
+  assert.equal(R.pickSearch("?fbclid=abc", "#MAUKHAHw"), "#MAUKHAHw");
+  // # がないときは ?（前の形 ?p= ・?d= のリンク）
+  assert.equal(R.pickSearch("?p=xyz", ""), "?p=xyz");
+  assert.equal(R.pickSearch("?p=xyz", "#"), "?p=xyz");
+  assert.equal(R.pickSearch("", ""), "");
+});

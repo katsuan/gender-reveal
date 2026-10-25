@@ -25,7 +25,7 @@
    * 共有ボタン類は消す前の元のURL(SHARE_URL)を使う。
    */
   const STORE_KEY = "gender-reveal:search";
-  let SEARCH = location.search || location.hash; // v3 は # 側に入っている
+  let SEARCH = R.pickSearch(location.search, location.hash); // v3 は # 側に入っている（# があれば先に読む）
   try {
     if (SEARCH) sessionStorage.setItem(STORE_KEY, SEARCH);
     else SEARCH = sessionStorage.getItem(STORE_KEY) || "";
@@ -182,7 +182,7 @@
       $("revealLabel").textContent = "";
       $("revealCountdown").innerHTML = "";
       $("steps").style.display = "none";
-      $("lockNote").innerHTML = `性別が設定されていません。<br><a href="create.html" style="color:var(--girl-deep);font-weight:700">作成ページ</a>からURLを作ってください`;
+      $("lockNote").innerHTML = "発表の中身が見つかりません。<br>リンクが途中で切れていないか、見てみてね。";
       return;
     }
     const locked = !!revealAt && revealAt > Date.now();
