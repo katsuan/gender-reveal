@@ -457,6 +457,12 @@
       setTimeout(() => sp.remove(), 1600);
     }
   }
+  // キーボードでも、Enter・スペースでプレゼントを押せるように
+  gift.addEventListener("keydown", e => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    e.preventDefault();
+    gift.click();
+  });
   gift.addEventListener("click", async e => {
     if (busy || taps >= TAPS_TO_OPEN) return;
     taps++;
