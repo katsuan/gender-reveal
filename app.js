@@ -618,7 +618,7 @@
     needsPass ? "🔑 開けるには合言葉が必要です" : "",
     SHARE_URL,
   ].filter(Boolean).join("\n");
-  $("exampleCopy").onclick = () => copyText($("exampleText").textContent, $("exampleCopy"));
+  $("exampleCopy").onclick = () => LineShareUI.copy($("exampleText").textContent, { button: $("exampleCopy") });
   // ボタン名どおりリンクだけをコピー(見えない文を混ぜない)
   /* ============ 画像で保存 ============ */
   // 発表後の画面と同じ内容を 1080×1350 の画像に描き直す（画面をそのまま写すとスマホで崩れやすいため）
@@ -702,20 +702,8 @@
     document.body.append(sheet);
   };
 
-  $("shareBtn").onclick = () => copyText(SHARE_URL, $("shareBtn"));
+  $("shareBtn").onclick = () => LineShareUI.copy(SHARE_URL, { button: $("shareBtn") });
 
-  // 文字をコピーして、ボタンを2秒だけ「コピーしました！」にする。できないときは、長押しで選べる窓に出す
-  async function copyText(text, button) {
-    try {
-      await navigator.clipboard.writeText(text);
-      const label = button.dataset.label || (button.dataset.label = button.textContent);
-      button.textContent = "コピーしました！";
-      clearTimeout(button._copied);
-      button._copied = setTimeout(() => (button.textContent = label), 2000);
-    } catch (_) {
-      LineShareUI.ask({ title: "長押ししてコピーしてね", input: text, readonly: true, ok: "閉じる", cancel: null });
-    }
-  }
   // ステージ外(結果画面)でESCで閉じる
   addEventListener("keydown", e => { if (e.key === "Escape" && !busy) stage.className = "stage"; });
 
