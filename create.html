@@ -93,8 +93,6 @@
   .gender input[value="boy"]:checked + span { border-color: var(--boy); background: #eef7ff; }
   .gender input[value="twins"]:checked + span, .gender input[value="custom"]:checked + span { border-color: var(--gold); background: #fffaeb; }
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .check { display: flex; align-items: center; gap: 8px; font-size: 13px; }
-  .check input { width: auto; }
   .btn {
     border: none; border-radius: 99px; padding: 18px 16px; font-family: inherit; font-size: 18px; font-weight: 800; color: #fff; cursor: pointer;
     background: linear-gradient(90deg, var(--boy), var(--girl)); box-shadow: 0 8px 20px rgba(200, 120, 180, .3);
@@ -273,7 +271,7 @@
 <!-- おくるんのカードの入口（LIFF ID とカードの URL は line-share の shared/oqrn.js に1か所） -->
 <script src="https://katsuan.github.io/line-share/shared/oqrn.js"></script>
 <script src="https://katsuan.github.io/line-share/shared/tool-share.js" data-tool="babyq" defer></script>
-<script src="create.js?v=202610271257"></script>
+<script src="create.js?v=202610291712"></script>
 <!-- 電波がなくても開けるように（sw.js） -->
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>
 </body>

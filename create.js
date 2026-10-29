@@ -66,10 +66,6 @@
     $("twinsBox").style.display = form.gender.value === "twins" ? "block" : "none";
   });
 
-  // 文字を UTF-8 の base64url にする
-  function b64urlEncode(str) {
-    return bytesToB64url(new TextEncoder().encode(str));
-  }
   // バイトの並びを base64url の文字にする
   function bytesToB64url(bytes) {
     let bin = ""; bytes.forEach(b => bin += String.fromCharCode(b));
@@ -254,11 +250,7 @@
     ].filter(Boolean).join("\n");
   }
   // 例文は画面に全文出しているので、そのままコピー
-  $("exampleCopy").onclick = async () => {
-    const text = $("exampleText").textContent;
-    try { await navigator.clipboard.writeText(text); LineShareUI.toast("📋 例文をコピーしました"); }
-    catch { LineShareUI.ask({ title: "長押ししてコピーしてね", input: text, readonly: true, ok: "閉じる", cancel: null }); }
-  };
+  $("exampleCopy").onclick = () => copyText($("exampleText").textContent, "📋 例文をコピーしました");
 
   // はじめての人にだけ、使い方を3つ（Q キットの ui.js は defer なので、読み終わってから）
   document.addEventListener("DOMContentLoaded", () => {
@@ -270,8 +262,16 @@
   });
 
   // ボタン名どおりリンクだけをコピー(見えない文を混ぜない)
-  $("copy").onclick = async () => {
-    try { await navigator.clipboard.writeText($("url").textContent); LineShareUI.toast(window.QSeason ? QSeason.decorate("🔗 リンクをコピーしました") : "🔗 リンクをコピーしました"); } // 季節の絵文字をときどき
-    catch { LineShareUI.ask({ title: "長押ししてコピーしてね", input: $("url").textContent, readonly: true, ok: "閉じる", cancel: null }); }
-  };
+  // 季節の絵文字をときどき（Q キットの season.js。読めていなければ付けない）
+  $("copy").onclick = () => copyText($("url").textContent, window.QSeason ? QSeason.decorate("🔗 リンクをコピーしました") : "🔗 リンクをコピーしました");
+
+  // 文字をコピーして、できたら done をトーストで出す。できないときは、長押しで選べる窓に出す
+  async function copyText(text, done) {
+    try {
+      await navigator.clipboard.writeText(text);
+      LineShareUI.toast(done);
+    } catch {
+      LineShareUI.ask({ title: "長押ししてコピーしてね", input: text, readonly: true, ok: "閉じる", cancel: null });
+    }
+  }
 })();

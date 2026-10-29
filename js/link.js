@@ -133,7 +133,6 @@
     return p;
   }
 
-  // 開いたときの URL の中身（location.search か location.hash）を読む
   /**
    * 開いた URL のどこを読むか（返すもの："#…" か "?…"）。v3 は # 側。
    * # があれば # を先に読む（LINE やほかのアプリが ?openExternalBrowser=1・?fbclid=… などを足しても読めるように）
@@ -142,6 +141,7 @@
     return (hash && hash.length > 1 ? hash : "") || search || "";
   }
 
+  // 開いたときの URL の中身（pickSearch で選んだ ?… か #…）を読んで、決まった形にそろえて返す
   function readParams(search) {
     let p = {};
     const text = String(search || "");
